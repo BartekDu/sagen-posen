@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parallel Reader</title>
+<style>
+:root {
+  --bg: #f4f1ea; --panel: #fffdf8; --ink: #1f1d1a; --muted: #6b665d; --line: #e2dccf;
+  --hl: rgba(255, 196, 0, .38); --hl-strong: rgba(255, 170, 0, .55); --pin: rgba(64, 140, 255, .30);
+  --word: rgba(64, 140, 255, .35); --phrase: #3d7be0; --shadow: 0 10px 32px rgba(20,30,60,.28);
+  --pop-bg: #eef2fb; --pop-ink: #172034; --pop-muted: #56627c; --pop-line: #c6d0e8; --pop-head: #2f5bd3; --pop-soft: #dfe7fa;
+  --c0: #d0552b; --c1: #2f8f5b; --c2: #7a4fd0; --c3: #c0880c; --c4: #1f8fb0; --c5: #b03a7a;
+  --accent: #8a5a00; --doubt: #c2410c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15140f; --panel: #1d1c17; --ink: #ece7dc; --muted: #9b958a; --line: #34322b;
+    --hl: rgba(255, 196, 0, .28); --hl-strong: rgba(255, 180, 0, .45); --pin: rgba(90, 160, 255, .30);
+    --word: rgba(90, 160, 255, .38); --phrase: #7fb0ff; --shadow: 0 10px 32px rgba(0,0,0,.7);
+    --pop-bg: #172033; --pop-ink: #e6ecf8; --pop-muted: #97a4bd; --pop-line: #2d3d5a; --pop-head: #3a66d8; --pop-soft: #1f2b44;
+    --c0: #ff8a5c; --c1: #5fd394; --c2: #b394ff; --c3: #f2c14e; --c4: #5ccfee; --c5: #f07ab8;
+    --accent: #f0b84a; --doubt: #f07a3c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15140f; --panel: #1d1c17; --ink: #ece7dc; --muted: #9b958a; --line: #34322b;
+  --hl: rgba(255, 196, 0, .28); --hl-strong: rgba(255, 180, 0, .45); --pin: rgba(90, 160, 255, .30);
+  --word: rgba(90, 160, 255, .38); --phrase: #7fb0ff; --shadow: 0 10px 32px rgba(0,0,0,.7);
+  --pop-bg: #172033; --pop-ink: #e6ecf8; --pop-muted: #97a4bd; --pop-line: #2d3d5a; --pop-head: #3a66d8; --pop-soft: #1f2b44;
+  --c0: #ff8a5c; --c1: #5fd394; --c2: #b394ff; --c3: #f2c14e; --c4: #5ccfee; --c5: #f07ab8;
+  --accent: #f0b84a; --doubt: #f07a3c;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font: 16px/1.6 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 10px 16px;
+  border-bottom: 1px solid var(--line); font-family: system-ui, sans-serif; font-size: 14px; }
+header h1 { font-size: 17px; margin: 0; }
+header .meta { color: var(--muted); }
+header .spacer { flex: 1; }
+header label { color: var(--muted); }
+header a { color: var(--accent); font-weight: 600; text-decoration: none; }
+header a:hover { text-decoration: underline; }
+header a.support { padding: 1px 10px; border: 1px solid var(--accent); border-radius: 99px; }
+select, button { font: inherit; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 6px; padding: 3px 8px; }
+main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: calc(100% - 49px); }
+.col { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
+.col:last-child { border-right: 0; }
+.col h2 { margin: 0; padding: 6px 16px; font: 600 12px/1.6 system-ui, sans-serif; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+.scroll { overflow-y: auto; padding: 16px; min-height: 0; flex: 1; scroll-behavior: smooth; }
+/* scan */
+.page { position: relative; margin: 0 auto 16px; max-width: 640px; background: var(--panel);
+  box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.page img { display: block; width: 100%; height: auto; }
+.page .no { position: absolute; top: 4px; right: 8px; font: 11px system-ui; color: var(--muted); }
+.rg { position: absolute; border-radius: 3px; cursor: pointer; mix-blend-mode: multiply; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rg { mix-blend-mode: normal; } }
+:root[data-theme="dark"] .rg { mix-blend-mode: normal; }
+/* text */
+.text { max-width: 640px; margin: 0 auto; }
+.text h3 { font-size: 1.25em; margin: 1.2em 0 .4em; }
+.text h4 { font-size: 1.05em; margin: 1em 0 .3em; }
+.text p { margin: 0 0 .8em; text-indent: 1.4em; hyphens: auto; }
+.s { border-radius: 3px; cursor: pointer; transition: background .08s; }
+.hl { background: var(--hl); }
+.rg.hl { background: var(--hl-strong); }
+.pin { background: var(--pin) !important; }
+.empty { color: var(--muted); font-style: italic; }
+/* reader notes: small badge after a sentence; "?" = open doubt (asks readers for help), "i" = editorial note */
+.nm { display: inline-block; min-width: 15px; height: 15px; margin: 0 1px 0 3px; padding: 0 3px; vertical-align: 5px;
+  border: 1px solid var(--muted); border-radius: 99px; background: var(--panel); color: var(--muted); text-indent: 0;
+  font: 700 10px/13px system-ui, sans-serif; font-style: normal; text-align: center; cursor: pointer; }
+.nm:hover { border-color: var(--phrase); color: var(--phrase); }
+.nm.q { background: var(--doubt); border-color: var(--doubt); color: #fff; }
+.nm.q:hover { filter: brightness(1.12); color: #fff; }
+.nm:focus-visible { outline: 2px solid var(--phrase); outline-offset: 1px; }
+/* grammar: words, phrases, clauses */
+.w { border-radius: 2px; }
+body.alt .w, body.gmode .w { cursor: help; }
+body.alt .w:hover, body.gmode .w:hover { box-shadow: inset 0 -2px var(--phrase); }
+.w.wsel { background: var(--word); }
+.w.wphr { box-shadow: inset 0 -2px var(--phrase); }
+.w[data-c] { text-decoration: underline 2px; text-underline-offset: 4px; }
+.w[data-c="0"] { text-decoration-color: var(--c0); } .w[data-c="1"] { text-decoration-color: var(--c1); }
+.w[data-c="2"] { text-decoration-color: var(--c2); } .w[data-c="3"] { text-decoration-color: var(--c3); }
+.w[data-c="4"] { text-decoration-color: var(--c4); } .w[data-c="5"] { text-decoration-color: var(--c5); }
+.w.wv { font-weight: 700; }
+/* grammar card: cool blue "sheet" with a header strip, so it never reads as part of the warm page text */
+#pop { position: fixed; z-index: 10; display: none; width: min(420px, calc(100vw - 32px)); max-height: 65vh;
+  overflow-y: auto; padding: 0; background: var(--pop-bg); color: var(--pop-ink); border: 1px solid var(--pop-line);
+  border-radius: 10px; box-shadow: var(--shadow), 0 0 0 3px var(--pop-soft); font: 13.5px/1.5 system-ui, sans-serif; }
+#pop.on { display: block; }
+#pop .kind { position: sticky; top: 0; display: flex; align-items: center; gap: 8px; padding: 5px 8px 5px 14px;
+  background: var(--pop-head); color: #fff; font: 600 11px/1.6 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+#pop .kind span { flex: 1; }
+#pop .kind button { border: 0; background: transparent; color: #fff; font-size: 16px; line-height: 1; padding: 0 4px; cursor: pointer; }
+#pop .bd { padding: 10px 14px 12px; }
+#pop .hd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+#pop .hd b { font: 700 19px/1.3 Georgia, serif; }
+#pop .lemma { color: var(--pop-muted); }
+#pop .tag { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--pop-line); color: var(--pop-muted); }
+#pop .tag.k { color: #fff; background: var(--pop-head); border-color: var(--pop-head); }
+#pop dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 6px 0 0; }
+#pop dt { color: var(--pop-muted); }
+#pop dd { margin: 0; }
+#pop .box { margin-top: 8px; padding: 6px 9px; border-left: 3px solid var(--phrase); background: var(--pop-soft); border-radius: 4px; }
+#pop .cl { margin-top: 7px; padding-left: 9px; border-left: 3px solid var(--pop-muted); }
+#pop .cl[data-c="0"] { border-color: var(--c0); } #pop .cl[data-c="1"] { border-color: var(--c1); }
+#pop .cl[data-c="2"] { border-color: var(--c2); } #pop .cl[data-c="3"] { border-color: var(--c3); }
+#pop .cl[data-c="4"] { border-color: var(--c4); } #pop .cl[data-c="5"] { border-color: var(--c5); }
+#pop .cl i { font-family: Georgia, serif; }
+#pop .muted { color: var(--pop-muted); }
+#pop kbd { border-color: var(--pop-line); }
+#pop ul { margin: 6px 0 0; padding-left: 18px; }
+#pop .note { margin-top: 8px; padding: 6px 9px; border-left: 3px solid var(--pop-muted); background: var(--pop-soft); border-radius: 4px; }
+#pop .note.q { border-left-color: var(--doubt); }
+#pop .note .tag { margin-right: 4px; }
+#pop .note p { margin: 4px 0 0; }
+#pop .tag.q { color: #fff; background: var(--doubt); border-color: var(--doubt); }
+#pop .fb { display: inline-block; margin-top: 7px; padding: 2px 10px; border-radius: 6px; background: var(--doubt); color: #fff;
+  font-weight: 600; text-decoration: none; }
+#pop .fb:hover { filter: brightness(1.12); }
+footer.hint { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); font: 12px system-ui;
+  color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 3px 12px;
+  white-space: nowrap; }
+kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; height: auto; }
+  .col { border-right: 0; border-bottom: 1px solid var(--line); }
+  .scroll { max-height: 70vh; }
+  footer.hint { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">…</h1><span class="meta" id="meta"></span>
+  <span class="spacer"></span>
+  <label>Tłumaczenie <select id="lang"><option value="pl">polski</option><option value="en">English</option></select></label>
+  <label title="Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)"><input type="checkbox" id="gmode"> gramatyka po kliknięciu</label>
+  <label><input type="checkbox" id="sync" checked> przewijaj razem</label>
+  <a id="report" target="_blank" rel="noopener" hidden title="Kliknij zdanie, żeby je przypiąć: zgłoszenie od razu je zawiera">Zgłoś błąd</a>
+  <a id="support" class="support" target="_blank" rel="noopener" hidden>☕ Postaw kawę</a>
+</header>
+<main>
+  <section class="col"><h2>Oryginał (skan)</h2><div class="scroll" id="scan"></div></section>
+  <section class="col"><h2>Oryginał — wersja cyfrowa</h2><div class="scroll"><div class="text" id="src"></div></div></section>
+  <section class="col"><h2 id="trh">Tłumaczenie</h2><div class="scroll"><div class="text" id="tr"></div></div></section>
+</main>
+<div id="pop" role="dialog" aria-live="polite"></div>
+<footer class="hint">Najedź: zdanie we wszystkich panelach · klik: przypnij · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · <kbd>Ctrl</kbd>+najedź: gramatyka zdania · klik na <b>?</b>/<b>i</b>: uwagi</footer>
+<script>
+const params = new URLSearchParams(location.search);
+const bookId = params.get("book") || "sagen-posen";
+const $ = (id) => document.getElementById(id);
+let book, byId, pinned = null, hovered = null, hoverEl = null, scrollTimer = null;
+let popKind = null, popKey = null, popAnchor = null; // kind: "word" | "sentence" | "notes"
+
+function storeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function storeSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+fetch(`books/${bookId}/book.json`).then(r => r.json()).then(b => { book = b; render(); });
+
+function render() {
+  const { book: meta, pages, blocks, sentences } = book;
+  document.title = `${meta.title} · Parallel Reader`;
+  $("title").textContent = meta.title;
+  $("meta").textContent = `${meta.author}, ${meta.year} · ${meta.license}`;
+  if (meta.support_url) { $("support").href = meta.support_url; $("support").hidden = false; }
+  if (meta.feedback_url) {  // the report link carries the pinned sentence, if any
+    const report = $("report"); report.hidden = false;
+    const update = () => { report.href = feedbackHref(meta.feedback_url, pinned && byId[pinned]); };
+    report.addEventListener("mousedown", update); report.addEventListener("focus", update); update();
+  }
+  byId = Object.fromEntries(sentences.map(s => [s.id, s]));
+
+  // scan panel: page images + one absolutely positioned box per region
+  const scan = $("scan");
+  for (const p of pages) {
+    const div = document.createElement("div");
+    div.className = "page"; div.dataset.page = p.n;
+    div.innerHTML = `<img src="books/${bookId}/${p.img}" alt="Strona ${p.n}" loading="lazy"><span class="no">s. ${p.n}</span>`;
+    for (const s of sentences) for (const r of s.regions) if (r.page === p.n) {
+      const box = document.createElement("div");
+      box.className = "rg"; box.dataset.sid = s.id;
+      Object.assign(box.style, { left: `${100 * r.x / p.w}%`, top: `${100 * r.y / p.h}%`,
+        width: `${100 * r.w / p.w}%`, height: `${100 * r.h / p.h}%` });
+      div.appendChild(box);
+    }
+    scan.appendChild(div);
+  }
+
+  // text panels share the block structure; the source panel also splits sentences into words (for grammar)
+  const fill = (el, field) => {
+    el.innerHTML = "";
+    for (const b of blocks) {
+      const tag = b.type === "h1" ? "h3" : b.type === "h2" ? "h4" : "p";
+      const node = document.createElement(tag);
+      b.sids.forEach((sid, i) => {
+        const s = byId[sid], span = document.createElement("span");
+        span.className = "s"; span.dataset.sid = sid;
+        const txt = s[field];
+        if (field === "src" && s.w) {
+          let at = 0;
+          s.w.forEach(([a, z], wi) => {
+            if (a > at) span.appendChild(document.createTextNode(txt.slice(at, a)));
+            const w = document.createElement("span");
+            w.className = "w"; w.dataset.wi = wi; w.textContent = txt.slice(a, z);
+            span.appendChild(w); at = z;
+          });
+          if (at < txt.length) span.appendChild(document.createTextNode(txt.slice(at)));
+        } else {
+          span.textContent = txt ?? "[brak tłumaczenia]";
+          if (txt == null) span.classList.add("empty");
+        }
+        if (s.notes) span.appendChild(noteMark(s));
+        node.appendChild(span);
+        if (i < b.sids.length - 1) node.appendChild(document.createTextNode(" "));
+      });
+      el.appendChild(node);
+    }
+  };
+  fill($("src"), "src");
+  const lang = $("lang");
+  lang.value = storeGet("pr-lang") || "pl";
+  const fillTr = () => { fill($("tr"), lang.value); $("trh").textContent = `Tłumaczenie (${lang.value.toUpperCase()})`;
+    storeSet("pr-lang", lang.value); paint(); if (popAnchor && !popAnchor.isConnected) hidePop(); };
+  lang.onchange = fillTr; fillTr();
+  const gmode = $("gmode");
+  gmode.checked = storeGet("pr-gmode") === "1";
+  const setG = () => { document.body.classList.toggle("gmode", gmode.checked); storeSet("pr-gmode", gmode.checked ? "1" : "0"); };
+  gmode.onchange = setG; setG();
+
+  // one delegated handler for all three panels
+  for (const root of [scan, $("src"), $("tr")]) {
+    root.addEventListener("mouseover", (e) => {
+      const el = e.target.closest("[data-sid]"); if (!el) return;
+      hoverEl = el;
+      if (e.ctrlKey || e.metaKey) showSentence(el.dataset.sid, el);
+      if (hovered === el.dataset.sid) return;
+      hovered = el.dataset.sid; paint(); scheduleScroll(root);
+    });
+    root.addEventListener("mouseleave", () => {
+      hovered = null; hoverEl = null; paint();
+      if (popKind === "sentence") hidePop();
+    });
+    root.addEventListener("click", (e) => {
+      const nm = e.target.closest(".nm");
+      if (nm) { e.preventDefault(); showNotes(nm); return; }  // badge click never pins the sentence
+      const w = e.target.closest(".w");
+      if (w && (e.altKey || gmode.checked)) { e.preventDefault(); showWord(w); return; }
+      const el = e.target.closest("[data-sid]"); if (!el) return;
+      pinned = pinned === el.dataset.sid ? null : el.dataset.sid; paint(); scheduleScroll(root, 0);
+    });
+  }
+}
+
+// Alt: stop Windows browsers from moving focus to their menu; Ctrl pressed while already hovering opens the sentence card
+addEventListener("keydown", (e) => {
+  if (e.key === "Alt") { e.preventDefault(); document.body.classList.add("alt"); }
+  if ((e.key === "Control" || e.key === "Meta") && hoverEl && !e.repeat) showSentence(hoverEl.dataset.sid, hoverEl);
+  if (e.key === "Escape") hidePop();
+});
+addEventListener("keyup", (e) => {
+  if (e.key === "Alt") document.body.classList.remove("alt");
+  if ((e.key === "Control" || e.key === "Meta") && popKind === "sentence") hidePop();
+});
+addEventListener("blur", () => { document.body.classList.remove("alt"); if (popKind === "sentence") hidePop(); });
+document.addEventListener("click", (e) => {
+  if (popKind === "word" && !e.target.closest("#pop") && !e.target.closest(".w")) hidePop();
+  if (popKind === "notes" && !e.target.closest("#pop") && !e.target.closest(".nm")) hidePop();
+});
+// keep the popup on its word when that panel scrolls (sync-scroll moves the *other* panels, so ignore those)
+for (const sc of document.querySelectorAll(".scroll"))
+  sc.addEventListener("scroll", () => { if (popKind && sc.contains(popAnchor)) place(popAnchor); }, { passive: true });
+
+function paint() {
+  document.querySelectorAll(".hl, .pin").forEach(n => n.classList.remove("hl", "pin"));
+  if (pinned) document.querySelectorAll(`[data-sid="${pinned}"]`).forEach(n => n.classList.add("pin"));
+  if (hovered) document.querySelectorAll(`[data-sid="${hovered}"]`).forEach(n => n.classList.add("hl"));
+}
+
+// bring the same sentence into view in the *other* panels (debounced so skimming doesn't jerk them around)
+function scheduleScroll(source, delay = 180) {
+  clearTimeout(scrollTimer);
+  const sid = hovered || pinned; if (!sid || !$("sync").checked) return;
+  scrollTimer = setTimeout(() => {
+    for (const pane of document.querySelectorAll(".scroll")) {
+      if (pane.contains(source)) continue;
+      const el = pane.querySelector(`[data-sid="${sid}"]`); if (!el) continue;
+      const pr = pane.getBoundingClientRect(), er = el.getBoundingClientRect();
+      if (er.top < pr.top + 20 || er.bottom > pr.bottom - 20)
+        pane.scrollTop += er.top - pr.top - pr.height / 3;
+    }
+  }, delay);
+}
+
+// ---- grammar popups ----
+const inRanges = (i, ranges) => (ranges || []).some(([a, z]) => i >= a && i <= z);
+const wordText = (s, i) => s.src.slice(s.w[i][0], s.w[i][1]);
+const rangeText = (s, ranges) => (ranges || []).map(([a, z]) => s.src.slice(s.w[a][0], s.w[z][1])).join(" … ");
+const srcWords = (sid) => document.querySelectorAll(`#src .s[data-sid="${sid}"] .w`);
+
+function clearMarks() {
+  document.querySelectorAll(".wsel, .wphr, .wv").forEach(n => n.classList.remove("wsel", "wphr", "wv"));
+  document.querySelectorAll(".w[data-c]").forEach(n => delete n.dataset.c);
+}
+
+function hidePop() {
+  const pop = $("pop"); pop.classList.remove("on"); popKind = popKey = popAnchor = null; clearMarks();
+}
+
+// word card: under the word. Sentence card: beside the sentence's column, so the coloured clauses stay visible.
+function place(anchor) {
+  const pop = $("pop"), r = anchor.getBoundingClientRect(), pr = pop.getBoundingClientRect();
+  const col = anchor.closest(".col").getBoundingClientRect();
+  let top, left;
+  if (popKind === "sentence" && innerWidth > 900) {
+    left = col.right + pr.width + 8 <= innerWidth ? col.right + 8 : col.left - pr.width - 8;
+    top = Math.min(Math.max(8, r.top), innerHeight - pr.height - 8);
+  } else {
+    top = r.bottom + 8;
+    if (top + pr.height > innerHeight - 8) top = Math.max(8, r.top - pr.height - 8);
+    left = r.left;
+  }
+  left = Math.min(Math.max(8, left), innerWidth - pr.width - 16);
+  Object.assign(pop.style, { top: `${top}px`, left: `${left}px` });
+}
+
+function openPop(kind, key, html, anchor) {
+  const pop = $("pop");
+  clearMarks(); popKind = kind; popKey = key; popAnchor = anchor;
+  const title = { word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji" }[kind];
+  pop.innerHTML = `<div class="kind"><span>${title}</span>` +
+    `<button type="button" aria-label="Zamknij" onclick="hidePop()">×</button></div><div class="bd">${html}</div>`; pop.scrollTop = 0; pop.classList.add("on"); place(anchor);
+}
+
+function showWord(el) {
+  const sid = el.closest("[data-sid]").dataset.sid, s = byId[sid], wi = +el.dataset.wi;
+  const g = s.g, w = g && g.words[wi];
+  if (!w) return;
+  const ph = w.phrase != null ? g.phrases[w.phrase] : null;
+  const rows = [["Forma", w.morph], ["Dlaczego", w.why], ["Odmiana", w.forms], ["Budowa", w.formation],
+    ["Skojarzenia", w.related], ["Dawniej", w.old]].filter(([, v]) => v);
+  openPop("word", `${sid}:${wi}`,
+    `<div class="hd"><b>${esc(w.t)}</b>${w.lemma && w.lemma !== w.t ? `<span class="lemma">← ${esc(w.lemma)}</span>` : ""}` +
+    `${w.pos ? `<span class="tag">${esc(w.pos)}</span>` : ""}</div>` +
+    `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` +
+    (ph ? `<div class="box"><b>${esc(ph.label)}</b>: <i>${esc(rangeText(s, ph.w))}</i><br>${esc(ph.note)}</div>` : "") +
+    `<p class="muted" style="margin:8px 0 0">Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.</p>`, el);
+  srcWords(sid).forEach((n, i) => { if (ph && inRanges(i, ph.w)) n.classList.add("wphr"); });
+  el.classList.add("wsel");
+}
+
+function showSentence(sid, anchor) {
+  if (popKind === "sentence" && popKey === sid) return;
+  const s = byId[sid], g = s && s.g;
+  if (!g) {
+    openPop("sentence", sid, `<p class="muted" style="margin:0">Brak opisu gramatyki dla tego zdania.</p>`, anchor);
+    return;
+  }
+  const st = g.sentence || {};
+  const clauses = st.clauses || [];
+  const html =
+    `<div class="hd">${[st.tense, st.mood, st.voice].filter(Boolean).map(t => `<span class="tag k">${esc(t)}</span>`).join("")}` +
+    `${st.type ? `<span class="tag">${esc(st.type)}</span>` : ""}</div>` +
+    (st.summary ? `<div>${esc(st.summary)}</div>` : "") +
+    clauses.map((c, ci) => {
+      const words = [];
+      for (const [a, z] of c.w) for (let i = a; i <= z; i++) words.push(i);
+      const txt = words.map(i => inRanges(i, c.verb) ? `<b>${esc(wordText(s, i))}</b>` : esc(wordText(s, i))).join(" ");
+      return `<div class="cl" data-c="${ci % 6}"><span class="muted">${esc(c.type)}</span><br><i>${txt}</i>` +
+        `${c.note ? `<br>${esc(c.note)}` : ""}</div>`;
+    }).join("") +
+    (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "");
+  openPop("sentence", sid, html, anchor);
+  srcWords(sid).forEach((n, i) => {
+    const ci = clauses.findIndex(c => inRanges(i, c.w));
+    if (ci >= 0) { n.dataset.c = ci % 6; if (inRanges(i, clauses[ci].verb)) n.classList.add("wv"); }
+  });
+}
+
+// ---- reader notes (books/<id>/notes.json): editorial remarks and open doubts readers can answer ----
+const NOTE_KIND = { transcription: "transkrypcja", translation: "tłumaczenie", grammar: "gramatyka" };
+const pageOf = (s) => s.regions.length ? s.regions[0].page : "?";
+
+function noteMark(s) {
+  const q = s.notes.some(n => n.doubt), b = document.createElement("button");
+  b.type = "button"; b.className = q ? "nm q" : "nm"; b.textContent = q ? "?" : "i";
+  b.title = q ? "Wątpliwość — kliknij, żeby zobaczyć i pomóc" : "Uwaga redakcji — kliknij, żeby zobaczyć";
+  b.setAttribute("aria-label", b.title);
+  return b;
+}
+
+// fills {title} and {body} in book.feedback_url (e.g. a GitHub "new issue" link), URL-encoded;
+// s = the sentence (optional), n = the note being answered (optional)
+function feedbackHref(tpl, s, n) {
+  let title = "Uwaga czytelnika", body = "**Co jest nie tak?** (transkrypcja / tłumaczenie / gramatyka)\n\n";
+  if (s) {
+    const lang = $("lang").value, tr = s[lang] != null ? lang : "pl";
+    title = `${n ? "Uwaga czytelnika" : "Błąd"}: ${s.id}`;
+    body = [
+      `**Zdanie:** ${s.id} (${book.book.title}, s. ${pageOf(s)})`,
+      `**Oryginał:** ${s.src}`,
+      s[tr] != null ? `**Tłumaczenie (${tr.toUpperCase()}):** ${s[tr]}` : null,
+      n ? `**Uwaga (${NOTE_KIND[n.kind] || n.kind}):** ${n.pl}` : null,
+      "", n ? "**Moja odpowiedź:**" : "**Co jest nie tak?** (transkrypcja / tłumaczenie / gramatyka)", "", "",
+    ].filter(l => l !== null).join("\n");
+  }
+  return tpl.split("{title}").join(encodeURIComponent(title)).split("{body}").join(encodeURIComponent(body));
+}
+
+function showNotes(el) {
+  if (popKind === "notes" && popAnchor === el) { hidePop(); return; }  // second click on the same badge closes
+  const s = byId[el.closest("[data-sid]").dataset.sid];
+  if (!s || !s.notes) return;
+  const lang = $("lang").value, url = book.book.feedback_url;
+  const html = `<div class="hd"><b>${esc(s.id)}</b><span class="tag">s. ${esc(pageOf(s))}</span></div>` +
+    s.notes.map(n =>
+      `<div class="note${n.doubt ? " q" : ""}"><span class="tag${n.doubt ? " q" : ""}">${n.doubt ? "wątpliwość" : "uwaga"}</span>` +
+      `<span class="tag">${esc(NOTE_KIND[n.kind] || n.kind)}</span><p>${esc((lang === "en" && n.en) || n.pl)}</p>` +
+      (n.doubt && url ? `<a class="fb" href="${esc(feedbackHref(url, s, n))}" target="_blank" rel="noopener">Znasz odpowiedź? Zgłoś</a>` : "") +
+      `</div>`).join("");
+  openPop("notes", s.id, html, el);
+}
+</script>
+</body>
+</html>
