@@ -49,6 +49,19 @@ header a { color: var(--accent); font-weight: 600; text-decoration: none; }
 header a:hover { text-decoration: underline; }
 header a.support { padding: 1px 11px; border: 1px solid var(--accent); border-radius: 99px; font-size: 13px; }
 header a.support:hover { text-decoration: none; background: var(--accent); color: var(--bg); }
+header a.about { padding: 1px 11px; border: 1px solid var(--line); border-radius: 99px; font-size: 13px; color: var(--ink); }
+header a.about:hover { text-decoration: none; border-color: var(--accent); }
+#aboutDlg { max-width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 64px); padding: 0; border: 1px solid var(--line);
+  border-radius: 12px; background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+#aboutDlg::backdrop { background: rgba(0, 0, 0, .45); }
+#aboutDlg .in { padding: 18px 22px 20px; }
+#aboutDlg h2 { margin: 0 0 10px; font-size: 1.3em; }
+#aboutDlg h3 { margin: 18px 0 6px; font-size: 1.05em; }
+#aboutDlg p { margin: 0 0 10px; }
+#aboutDlg a { color: var(--accent); font-weight: 600; }
+#aboutDlg .x { position: sticky; top: 0; float: right; margin: 8px 8px 0 0; border: 0; background: transparent; font-size: 20px;
+  line-height: 1; cursor: pointer; color: var(--muted); }
+#aboutDlg .muted { color: var(--muted); font: 13px/1.5 system-ui, sans-serif; }
 select, button { font: inherit; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
   border-radius: 6px; padding: 3px 8px; }
 body { display: flex; flex-direction: column; }  /* header may wrap on narrow screens; panels take the rest */
@@ -111,6 +124,9 @@ body.alt .w:hover, body.gmode .w:hover { box-shadow: inset 0 -2px var(--phrase);
 #pop .lemma { color: var(--pop-muted); }
 #pop .gl { margin: 0 0 6px; font: 600 16px/1.35 system-ui, sans-serif; }
 #pop .cl .gl { margin: 2px 0 0; font-size: 13.5px; }
+#pop .rep { color: var(--doubt); font-weight: 600; text-decoration: none; }
+#pop .rep:hover { text-decoration: underline; }
+#pop .plonly { margin: 8px 0 0; font-size: 12px; color: var(--pop-muted); font-style: italic; }
 #pop .lit { margin: 0 0 8px; padding: 6px 9px; background: var(--pop-soft); border-radius: 4px; }
 /* sentence card, word by word: each German word with its short Polish meaning underneath, underlined in its
    clause's colour (the full meaning is in the Alt+click word card) */
@@ -130,7 +146,7 @@ body.alt .w:hover, body.gmode .w:hover { box-shadow: inset 0 -2px var(--phrase);
 #pop .il span[data-c="0"] { border-color: var(--c0); } #pop .il span[data-c="1"] { border-color: var(--c1); }
 #pop .il span[data-c="2"] { border-color: var(--c2); } #pop .il span[data-c="3"] { border-color: var(--c3); }
 #pop .il span[data-c="4"] { border-color: var(--c4); } #pop .il span[data-c="5"] { border-color: var(--c5); }
-#pop.stuck .kind span::after { content: " · przypięte (Esc zamyka)"; font-weight: 400; opacity: .8; }
+#pop.stuck .kind span::after { content: " · " attr(data-stuck); font-weight: 400; opacity: .8; }
 #pop .tag { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--pop-line); color: var(--pop-muted); }
 #pop .tag.k { color: #fff; background: var(--pop-head); border-color: var(--pop-head); }
 #pop dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 6px 0 0; }
@@ -169,25 +185,131 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
 <header>
   <h1 id="title">…</h1><span class="meta" id="meta"></span>
   <span class="spacer"></span>
-  <label>Tłumaczenie <select id="lang"><option value="pl">polski</option><option value="en">English</option></select></label>
-  <label title="Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)"><input type="checkbox" id="gmode"> gramatyka po kliknięciu</label>
-  <label><input type="checkbox" id="sync" checked> przewijaj razem</label>
-  <a id="report" target="_blank" rel="noopener" hidden title="Kliknij zdanie, żeby je przypiąć: zgłoszenie od razu je zawiera">Zgłoś błąd</a>
-  <a id="support" class="support" target="_blank" rel="noopener" hidden>☕ Postaw kawę</a>
+  <label><span data-i="lang"></span> <select id="lang"><option value="pl">polski</option><option value="en">English</option></select></label>
+  <label data-i-title="gmodeTip"><input type="checkbox" id="gmode"> <span data-i="gmode"></span></label>
+  <label><input type="checkbox" id="sync" checked> <span data-i="sync"></span></label>
+  <a id="report" target="_blank" rel="noopener" hidden data-i="report" data-i-title="reportTip"></a>
+  <a id="about" class="about" href="#about" data-i="about"></a>
+  <a id="support" class="support" target="_blank" rel="noopener" hidden data-i="support"></a>
 </header>
 <main>
-  <section class="col"><h2>Oryginał (skan)</h2><div class="scroll" id="scan"></div></section>
-  <section class="col"><h2>Oryginał — wersja cyfrowa</h2><div class="scroll"><div class="text" id="src"></div></div></section>
+  <section class="col"><h2 data-i="colScan"></h2><div class="scroll" id="scan"></div></section>
+  <section class="col"><h2 data-i="colSrc"></h2><div class="scroll"><div class="text" id="src"></div></div></section>
   <section class="col"><h2 id="trh">Tłumaczenie</h2><div class="scroll"><div class="text" id="tr"></div></div></section>
 </main>
 <div id="pop" role="dialog" aria-live="polite"></div>
-<footer class="hint">Najedź: zdanie we wszystkich panelach · klik: przypnij · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · <kbd>Ctrl</kbd>+najedź: gramatyka zdania (<kbd>Ctrl</kbd>+klik: przypnij) · klik na <b>?</b>/<b>i</b>: uwagi</footer>
+<footer class="hint" data-i-html="hint"></footer>
+<dialog id="aboutDlg"><button type="button" class="x" data-i-aria="close" onclick="this.closest('dialog').close()">×</button><div class="in" id="aboutBody"></div></dialog>
 <script>
 const params = new URLSearchParams(location.search);
 const bookId = params.get("book") || "sagen-posen";
 const $ = (id) => document.getElementById(id);
 let book, byId, pinned = null, hovered = null, hoverEl = null, scrollTimer = null;
 let popKind = null, popKey = null, popAnchor = null, popStuck = false, popBeside = false, popBack = null; // kind: "word" | "sentence" | "notes"
+
+// ---- interface language: follows the translation language (PL / EN); the first visit takes the browser's language ----
+const UI = {
+  pl: {
+    lang: "Tłumaczenie", gmode: "gramatyka po kliknięciu", gmodeTip: "Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)",
+    sync: "przewijaj razem", report: "Zgłoś błąd", reportTip: "Błąd w konkretnym zdaniu zgłosisz najszybciej z karty zdania (Ctrl+klik)", reportHere: "Zgłoś błąd w tym zdaniu",
+    about: "O projekcie", support: "☕ Postaw kawę", close: "Zamknij",
+    colScan: "Oryginał (skan)", colSrc: "Oryginał — wersja cyfrowa", colTr: "Tłumaczenie", page: "s.", pageAlt: "Strona",
+    hint: "Najedź: zdanie we wszystkich panelach · <kbd>Ctrl</kbd>+najedź: zdanie słowo po słowie (<kbd>Ctrl</kbd>+klik: przypnij) · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · klik na <b>?</b>/<b>i</b>: uwagi",
+    noTr: "[brak tłumaczenia]", word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji",
+    back: "← zdanie", stuck: "przypięte (Esc zamyka)", details: "kliknij: szczegóły", literal: "Dosłownie:",
+    form: "Forma", why: "Dlaczego", forms: "Odmiana", formation: "Budowa", related: "Skojarzenia", old: "Dawniej",
+    wholeSentence: "Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.", noGrammar: "Brak opisu gramatyki dla tego zdania.",
+    plOnly: "", like: "jak", langs: { "ang.": "angielskie", "pol.": "polskie", "łac.": "łacińskie", "fr.": "francuskie", "gr.": "greckie" },
+    doubt: "wątpliwość", remark: "uwaga", answer: "Znasz odpowiedź? Zgłoś",
+    doubtTip: "Wątpliwość — kliknij, żeby zobaczyć i pomóc", remarkTip: "Uwaga redakcji — kliknij, żeby zobaczyć",
+    kinds: { transcription: "transkrypcja", translation: "tłumaczenie", grammar: "gramatyka" },
+    fbTitle: "Uwaga czytelnika", fbError: "Błąd", fbSentence: "Zdanie", fbOriginal: "Oryginał", fbTranslation: "Tłumaczenie",
+    fbNote: "Uwaga", fbWhat: "**Co jest nie tak?** (transkrypcja / tłumaczenie / gramatyka)", fbAnswer: "**Moja odpowiedź:**",
+    aboutHtml: (b) => `<h2>O projekcie</h2>
+<p>To projekt robiony dla frajdy. Autor tego czytnika chciał przeczytać <i>${b.title}</i>, zbiór podań z dawnego
+Poznańskiego, który w ${b.year} r. spisał ${b.author}, ale nie zna niemieckiego na tyle, żeby swobodnie czytać oryginał.
+A nie chciał stracić niuansów, które daje dopiero patrzenie na oryginał: stary druk i prawdziwe słowa podań.</p>
+<p>Dlatego czytnik pokazuje obok siebie skan, tekst i tłumaczenie, a karta zdania (przytrzymaj <b>Ctrl</b> i najedź na zdanie)
+tłumaczy je słowo po słowie i rozkłada długie słowa na części. Da się czytać oryginał, nawet nie znając języka.</p>
+<p>Transkrypcję, tłumaczenia i opisy gramatyczne przygotowują agenci AI. Błędy się zdarzają: przycisk „Zgłoś błąd” w nagłówku bardzo pomaga.</p>
+<h3>Masz starą książkę?</h3>
+<p>Jeśli masz albo znasz stare książki w domenie publicznej, chętnie dodam kolejne, szczególnie regionalny folklor, podania
+i legendy, także z innych krajów i kultur.${b.propose_url ? ` <a href="${esc(b.propose_url)}" target="_blank" rel="noopener">Zaproponuj książkę</a>.` : ""}</p>
+${b.support_url ? `<p>Jeśli czytnik Ci się przydał, możesz <a href="${esc(b.support_url)}" target="_blank" rel="noopener">postawić kawę</a>.</p>` : ""}
+<p class="muted">W czytniku: ${b.pages} stron skanu, ${b.sentences} zdań. ${esc(b.license)}.</p>`,
+  },
+  en: {
+    lang: "Translation", gmode: "grammar on click", gmodeTip: "A click on a word in the digital text shows its grammar (no Alt needed, e.g. on a phone)",
+    sync: "scroll together", report: "Report an error", reportTip: "For an error in one sentence, use the sentence card (Ctrl+click)", reportHere: "Report an error in this sentence",
+    about: "About", support: "☕ Buy me a coffee", close: "Close",
+    colScan: "Original (scan)", colSrc: "Original — digital text", colTr: "Translation", page: "p.", pageAlt: "Page",
+    hint: "Hover: the sentence in all panels · <kbd>Ctrl</kbd>+hover: the sentence word by word (<kbd>Ctrl</kbd>+click: pin) · <kbd>Alt</kbd>+click a word: its grammar · click <b>?</b>/<b>i</b>: notes",
+    noTr: "[no translation yet]", word: "Grammar · word", sentence: "Grammar · sentence", notes: "Editor's notes",
+    back: "← sentence", stuck: "pinned (Esc closes)", details: "click: details", literal: "Word for word:",
+    form: "Form", why: "Why", forms: "Paradigm", formation: "Structure", related: "Related", old: "Older use",
+    wholeSentence: "The whole sentence: hold <kbd>Ctrl</kbd> and hover.", noGrammar: "No grammar notes for this sentence yet.",
+    plOnly: "The grammar notes and word meanings are in Polish for now.", like: "cf.",
+    langs: { "ang.": "English", "pol.": "Polish", "łac.": "Latin", "fr.": "French", "gr.": "Greek" },
+    doubt: "open question", remark: "note", answer: "Know the answer? Tell us",
+    doubtTip: "Open question — click to see it and help", remarkTip: "Editor's note — click to see it",
+    kinds: { transcription: "transcription", translation: "translation", grammar: "grammar" },
+    fbTitle: "Reader note", fbError: "Error", fbSentence: "Sentence", fbOriginal: "Original", fbTranslation: "Translation",
+    fbNote: "Note", fbWhat: "**What is wrong?** (transcription / translation / grammar)", fbAnswer: "**My answer:**",
+    aboutHtml: (b) => `<h2>About</h2>
+<p>This is a project made for fun. The author of this reader wanted to read <i>${b.title}</i>, folk legends from the old
+Province of Posen collected by ${b.author} in ${b.year}, but doesn't know German well enough to read the original with
+ease, and didn't want to lose the nuance that only comes from the original: the old print and the legends' own words.</p>
+<p>So the reader puts the scan, the text and a translation side by side, and the sentence card (hold <b>Ctrl</b> and hover
+a sentence) explains it word by word and splits long words into their parts. You can read the original without knowing
+the language. The grammar notes are in Polish for now.</p>
+<p>The transcription, translations and grammar notes are prepared by AI agents. Mistakes happen: the “Report an error” link in the header helps a lot.</p>
+<h3>Do you have an old book?</h3>
+<p>If you have or know old public-domain books, I am happy to add more, especially regional folklore, legends and folk
+tales, from any country or culture.${b.propose_url ? ` <a href="${esc(b.propose_url)}" target="_blank" rel="noopener">Suggest a book</a>.` : ""}</p>
+${b.support_url ? `<p>If the reader was useful to you, you can <a href="${esc(b.support_url)}" target="_blank" rel="noopener">buy me a coffee</a>.</p>` : ""}
+<p class="muted">In the reader: ${b.pages} scanned pages, ${b.sentences} sentences. ${esc(b.license)}.</p>`,
+  },
+};
+const ui = () => UI[$("lang").value] || UI.pl;
+// English grammar notes (pipeline/notes_en.py): Polish text + context -> English, loaded only in English mode
+let EN = null;
+function cyrb53(str) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const isEN = () => $("lang").value === "en" && EN && Object.keys(EN).length > 0;
+// a note in the reader's language: English when there is a translation, else the Polish original
+const L = (pl, ctx = "") => (pl && isEN() && EN[cyrb53(`${ctx}\u0001${pl}`)]) || pl;
+function loadEN() {
+  if (EN || $("lang").value !== "en") return;
+  EN = {};  // only one request, even if it fails
+  fetch(`books/${bookId}/grammar-en.json`).then(r => r.ok ? r.json() : {}).then(d => { EN = d; }).catch(() => {});
+}
+const t = (k) => ui()[k];
+const plOnly = () => t("plOnly") && !isEN() ? `<p class="plonly">${t("plOnly")}</p>` : "";
+function browserLang() {
+  const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ""];
+  return langs.some(l => /^pl\b/i.test(l)) ? "pl" : "en";
+}
+function applyUI() {
+  document.documentElement.lang = $("lang").value;
+  for (const el of document.querySelectorAll("[data-i]")) el.textContent = t(el.dataset.i);
+  for (const el of document.querySelectorAll("[data-i-html]")) el.innerHTML = t(el.dataset.iHtml);
+  for (const el of document.querySelectorAll("[data-i-title]")) el.title = t(el.dataset.iTitle);
+  for (const el of document.querySelectorAll("[data-i-aria]")) el.setAttribute("aria-label", t(el.dataset.iAria));
+  for (const el of document.querySelectorAll(".cap")) el.textContent = el.dataset[$("lang").value] || el.dataset.pl;
+  for (const el of document.querySelectorAll(".page .no")) el.textContent = `${t("page")} ${el.closest(".page").dataset.page}`;
+  for (const el of document.querySelectorAll(".nm")) { el.title = el.classList.contains("q") ? t("doubtTip") : t("remarkTip"); el.setAttribute("aria-label", el.title); }
+}
 
 function storeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function storeSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
@@ -212,7 +334,10 @@ function trackReading(pane) {
 // "(rodzajnik »ten«; po polsku pomijamy)" -> "(rodzajnik)"
 function shortGloss(g) {
   g = g.trim();
-  if (g.startsWith("(")) return `(${g.slice(1).split(/[;,:„“"»«)]/)[0].trim()})`;
+  if (g.startsWith("(")) {  // a role: its first words, cut at ; , : or ) but not at an opening quote ("(„zu” before ...)")
+    const head = g.slice(1).split(/[;,:)]/)[0].replace(/[„“”"»«]/g, "").trim();
+    return `(${head || g.slice(1).split(")")[0].trim()})`;
+  }
   return g.split(/\s*[;(→]/)[0].trim() || g;
 }
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -221,6 +346,13 @@ fetch(`books/${bookId}/book.json`).then(r => r.json()).then(b => { book = b; ren
 
 function render() {
   const { book: meta, pages, blocks, sentences } = book;
+  $("lang").value = storeGet("pr-lang") || browserLang();
+  $("about").addEventListener("click", (e) => {
+    e.preventDefault(); track("about");
+    $("aboutBody").innerHTML = t("aboutHtml")({ ...meta, pages: pages.length, sentences: sentences.length });
+    $("aboutDlg").showModal();
+  });
+  $("aboutDlg").addEventListener("click", (e) => { if (e.target === $("aboutDlg")) $("aboutDlg").close(); });  // backdrop
   document.title = `${meta.title} · Parallel Reader`;
   $("title").textContent = meta.title;
   $("meta").textContent = $("meta").title = `${meta.author}, ${meta.year} · ${meta.license}`;
@@ -231,10 +363,12 @@ function render() {
     document.head.appendChild(sc);
   }
   $("support").addEventListener("click", () => track("support"));
-  $("report").addEventListener("click", () => track("report", { sid: pinned || "" }));
-  if (meta.feedback_url) {  // the report link carries the pinned sentence, if any
+  if (meta.feedback_url && !meta.propose_url)  // book proposals go to the same issue tracker
+    meta.propose_url = meta.feedback_url.replace(/\?.*$/, "?template=ksiazka.md");
+  $("report").addEventListener("click", () => track("report", { sid: "" }));
+  if (meta.feedback_url) {  // built on click, so the report text is in the current interface language
     const report = $("report"); report.hidden = false;
-    const update = () => { report.href = feedbackHref(meta.feedback_url, pinned && byId[pinned]); };
+    const update = () => { report.href = feedbackHref(meta.feedback_url, null); };
     report.addEventListener("mousedown", update); report.addEventListener("focus", update); update();
   }
   byId = Object.fromEntries(sentences.map(s => [s.id, s]));
@@ -244,11 +378,10 @@ function render() {
   for (const p of pages) {
     const div = document.createElement("div");
     div.className = "page"; div.dataset.page = p.n;
-    div.innerHTML = `<img src="books/${bookId}/${p.img}" alt="Strona ${p.n}" loading="lazy"><span class="no">s. ${p.n}</span>`;
+    div.innerHTML = `<img src="books/${bookId}/${p.img}" alt="${t("pageAlt")} ${p.n}" loading="lazy"><span class="no">${t("page")} ${p.n}</span>`;
     if (p.caption) {
       const cap = document.createElement("p"); cap.className = "cap";
-      const fillCap = () => { cap.textContent = p.caption[$("lang").value] || p.caption.pl || p.caption.en; };
-      $("lang").addEventListener("change", fillCap); fillCap();
+      cap.dataset.pl = p.caption.pl || p.caption.en || ""; cap.dataset.en = p.caption.en || p.caption.pl || "";  // applyUI picks one
       scan.appendChild(div); scan.appendChild(cap); continue;  // image-only pages have no sentence boxes
     }
     for (const s of sentences) for (const r of s.regions) if (r.page === p.n) {
@@ -281,7 +414,7 @@ function render() {
           });
           if (at < txt.length) span.appendChild(document.createTextNode(txt.slice(at)));
         } else {
-          span.textContent = txt ?? "[brak tłumaczenia]";
+          span.textContent = txt ?? t("noTr");
           if (txt == null) span.classList.add("empty");
         }
         if (s.notes) span.appendChild(noteMark(s));
@@ -293,10 +426,10 @@ function render() {
   };
   fill($("src"), "src");
   const lang = $("lang");
-  lang.value = storeGet("pr-lang") || "pl";
-  const fillTr = () => { fill($("tr"), lang.value); $("trh").textContent = `Tłumaczenie (${lang.value.toUpperCase()})`;
-    storeSet("pr-lang", lang.value); paint(); if (popAnchor && !popAnchor.isConnected) hidePop(); };
-  lang.onchange = fillTr; fillTr();
+  const fillTr = (save) => { applyUI(); fill($("tr"), lang.value); $("trh").textContent = `${t("colTr")} (${lang.value.toUpperCase()})`;
+    if (save) storeSet("pr-lang", lang.value);  // only a choice the reader made is remembered; otherwise follow the browser
+    paint(); if (popKind) hidePop(); loadEN(); };  // an open card would stay in the old language
+  lang.onchange = () => fillTr(true); fillTr(false);
   const gmode = $("gmode");
   gmode.checked = storeGet("pr-gmode") === "1";
   const setG = () => { document.body.classList.toggle("gmode", gmode.checked); storeSet("pr-gmode", gmode.checked ? "1" : "0"); };
@@ -321,8 +454,6 @@ function render() {
       if (se) { e.preventDefault(); popStuck = false; showSentence(se.dataset.sid, se, true); stickPop(); return; }
       const w = e.target.closest(".w");
       if (w && (e.altKey || gmode.checked)) { e.preventDefault(); showWord(w); return; }
-      const el = e.target.closest("[data-sid]"); if (!el) return;
-      pinned = pinned === el.dataset.sid ? null : el.dataset.sid; paint(); scheduleScroll(root, 0);
     });
   }
 }
@@ -418,10 +549,9 @@ function openPop(kind, key, html, anchor, back = null) {
   const pop = $("pop");
   clearMarks(); popKind = kind; popKey = key; popAnchor = anchor; popBack = back; popBeside = !!back;
   trackOnce(`pop-${kind}`, key);
-  const title = { word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji" }[kind];
-  pop.innerHTML = `<div class="kind"><span>${title}</span>` +
-    (back ? `<button type="button" class="back" onclick="event.stopPropagation(); backToSentence()">← zdanie</button>` : "") +
-    `<button type="button" aria-label="Zamknij" onclick="hidePop()">×</button></div><div class="bd">${html}</div>`; pop.scrollTop = 0; pop.classList.add("on"); place(anchor);
+  pop.innerHTML = `<div class="kind"><span data-stuck="${t("stuck")}">${t(kind)}</span>` +
+    (back ? `<button type="button" class="back" onclick="event.stopPropagation(); backToSentence()">${t("back")}</button>` : "") +
+    `<button type="button" aria-label="${t("close")}" onclick="hidePop()">×</button></div><div class="bd">${html}</div>`; pop.scrollTop = 0; pop.classList.add("on"); place(anchor);
 }
 
 function backToSentence() {
@@ -429,11 +559,10 @@ function backToSentence() {
   showSentence(sid, anchor, true); stickPop();
 }
 
-// a cognate note "ang. here" reads "jak angielskie here": the language spelled out, the word in italics
-const LANGS = { "ang.": "angielskie", "pol.": "polskie", "łac.": "łacińskie", "fr.": "francuskie", "gr.": "greckie" };
+// a cognate note "ang. here" reads "jak angielskie here" / "cf. English here": the language spelled out, the word in italics
 function relText(rel) {
-  const m = rel.match(/^\s*(\S+\.)\s*(.*)$/);
-  return m && LANGS[m[1]] ? `jak ${LANGS[m[1]]} <i>${esc(m[2])}</i>` : esc(rel);
+  const m = rel.match(/^\s*(\S+\.)\s*(.*)$/), name = m && ui().langs[m[1]];
+  return name ? `${t("like")} ${name} <i>${esc(m[2])}</i>` : esc(rel);
 }
 
 // "her·bei·zu·locken": the word with dots between its parts (pipeline/parts.py), or just the word
@@ -448,17 +577,18 @@ function wordCard(sid, wi, anchor, fromSentence = false) {
   const s = byId[sid], g = s && s.g, w = g && g.words[wi];
   if (!w) return;
   const ph = w.phrase != null ? g.phrases[w.phrase] : null;
-  const rows = [["Forma", w.morph], ["Dlaczego", w.why], ["Odmiana", w.forms], ["Budowa", w.formation],
-    ["Skojarzenia", w.related], ["Dawniej", w.old]].filter(([, v]) => v);
+  const rows = [["form", w.morph], ["why", w.why], ["forms", w.forms], ["formation", w.formation],
+    ["related", w.related], ["old", w.old]].filter(([, v]) => v).map(([k, v]) => [t(k), L(v)]);
   openPop("word", `${sid}:${wi}`,
     `<div class="hd"><b>${dotted(w)}</b>${w.lemma && w.lemma !== w.t ? `<span class="lemma">← ${esc(w.lemma)}</span>` : ""}` +
-    `${w.pos ? `<span class="tag">${esc(w.pos)}</span>` : ""}</div>` +
-    (w.gloss ? `<div class="gl">${esc(w.gloss)}</div>` : "") +
-    (w.parts ? `<div class="parts">${w.parts.map(p => `<b>${esc(p.p)}</b><span>${esc(p.g).replace(/(^|[\s(])ang\. /g, "$1angielskie ")}` +
+    `${w.pos ? `<span class="tag">${esc(L(w.pos))}</span>` : ""}</div>` +
+    (w.gloss ? `<div class="gl">${esc(L(w.gloss, w.t))}</div>` : "") +
+    (w.parts ? `<div class="parts">${w.parts.map(p => `<b>${esc(p.p)}</b><span>${isEN() ? esc(L(p.g, p.p))
+      : esc(p.g).replace(/(^|[\s(])ang\. /g, "$1angielskie ")}` +
       `${p.rel ? ` <span class="muted">(${relText(p.rel)})</span>` : ""}</span>`).join("")}</div>` : "") +
     `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` +
-    (ph ? `<div class="box"><b>${esc(ph.label)}</b>: <i>${esc(rangeText(s, ph.w))}</i><br>${esc(ph.note)}</div>` : "") +
-    (fromSentence ? "" : `<p class="muted" style="margin:8px 0 0">Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.</p>`),
+    (ph ? `<div class="box"><b>${esc(L(ph.label))}</b>: <i>${esc(rangeText(s, ph.w))}</i><br>${esc(L(ph.note))}</div>` : "") +
+    (fromSentence ? "" : `<p class="muted" style="margin:8px 0 0">${t("wholeSentence")}</p>`) + plOnly(),
     anchor, fromSentence ? sid : null);
   srcWords(sid).forEach((n, i) => {
     if (ph && inRanges(i, ph.w)) n.classList.add("wphr");
@@ -470,31 +600,34 @@ function showSentence(sid, anchor, force) {
   if (popKind === "sentence" && popKey === sid && !force) return;
   const s = byId[sid], g = s && s.g;
   if (!g) {
-    openPop("sentence", sid, `<p class="muted" style="margin:0">Brak opisu gramatyki dla tego zdania.</p>`, anchor);
+    openPop("sentence", sid, `<p class="muted" style="margin:0">${t("noGrammar")}</p>`, anchor);
     return;
   }
   const st = g.sentence || {};
   const clauses = st.clauses || [];
   const il = g.words.some(w => w.gloss) ? `<div class="il">${g.words.map((w, i) => {
       const ci = clauses.findIndex(c => inRanges(i, c.w)), v = ci >= 0 && inRanges(i, clauses[ci].verb);
-      return `<span data-wi="${i}"${ci >= 0 ? ` data-c="${ci % 6}"` : ""} title="${esc(w.gloss || "")} · kliknij: szczegóły">` +
+      const gl = L(w.gloss, w.t);
+      return `<span data-wi="${i}"${ci >= 0 ? ` data-c="${ci % 6}"` : ""} title="${esc(gl || "")} · ${t("details")}">` +
         `<b${v ? ' class="v"' : ""}>${dotted(w)}</b>` +
-        `<small>${esc(w.gloss ? shortGloss(w.gloss) : "·")}</small></span>`;
+        `<small>${esc(gl ? shortGloss(gl) : "·")}</small></span>`;
     }).join("")}</div>` : "";
   const html =
-    `<div class="hd">${[st.tense, st.mood, st.voice].filter(Boolean).map(t => `<span class="tag k">${esc(t)}</span>`).join("")}` +
-    `${st.type ? `<span class="tag">${esc(st.type)}</span>` : ""}</div>` + il +
-    (st.literal ? `<div class="lit"><b>Dosłownie:</b> ${esc(st.literal)}</div>` : "") +
-    (st.summary ? `<div>${esc(st.summary)}</div>` : "") +
+    `<div class="hd">${[st.tense, st.mood, st.voice].filter(Boolean).map(x => `<span class="tag k">${esc(L(x))}</span>`).join("")}` +
+    `${st.type ? `<span class="tag">${esc(L(st.type))}</span>` : ""}</div>` + il +
+    (st.literal ? `<div class="lit"><b>${t("literal")}</b> ${esc(L(st.literal, s.src))}</div>` : "") +
+    (st.summary ? `<div>${esc(L(st.summary))}</div>` : "") +
     clauses.map((c, ci) => {
       const words = [];
       for (const [a, z] of c.w) for (let i = a; i <= z; i++) words.push(i);
       const txt = words.map(i => inRanges(i, c.verb) ? `<b>${esc(wordText(s, i))}</b>` : esc(wordText(s, i))).join(" ");
-      return `<div class="cl" data-c="${ci % 6}"><span class="muted">${esc(c.type)}</span><br><i>${txt}</i>` +
-        `${c.gloss ? `<div class="gl">→ ${esc(c.gloss)}</div>` : ""}` +
-        `${c.note ? `<br>${esc(c.note)}` : ""}</div>`;
+      return `<div class="cl" data-c="${ci % 6}"><span class="muted">${esc(L(c.type))}</span><br><i>${txt}</i>` +
+        `${c.gloss ? `<div class="gl">→ ${esc(L(c.gloss))}</div>` : ""}` +
+        `${c.note ? `<br>${esc(L(c.note))}` : ""}</div>`;
     }).join("") +
-    (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "");
+    (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(L(n))}</li>`).join("")}</ul>` : "") + plOnly() +
+    (book.book.feedback_url ? `<p style="margin:10px 0 0"><a class="rep" href="${esc(feedbackHref(book.book.feedback_url, s))}"` +
+      ` target="_blank" rel="noopener" onclick="track('report', { sid: '${sid}' })">${t("reportHere")}</a></p>` : "");
   openPop("sentence", sid, html, anchor);
   srcWords(sid).forEach((n, i) => {
     const ci = clauses.findIndex(c => inRanges(i, c.w));
@@ -503,13 +636,12 @@ function showSentence(sid, anchor, force) {
 }
 
 // ---- reader notes (books/<id>/notes.json): editorial remarks and open doubts readers can answer ----
-const NOTE_KIND = { transcription: "transkrypcja", translation: "tłumaczenie", grammar: "gramatyka" };
 const pageOf = (s) => s.regions.length ? s.regions[0].page : "?";
 
 function noteMark(s) {
   const q = s.notes.some(n => n.doubt), b = document.createElement("button");
   b.type = "button"; b.className = q ? "nm q" : "nm"; b.textContent = q ? "?" : "i";
-  b.title = q ? "Wątpliwość — kliknij, żeby zobaczyć i pomóc" : "Uwaga redakcji — kliknij, żeby zobaczyć";
+  b.title = q ? t("doubtTip") : t("remarkTip");
   b.setAttribute("aria-label", b.title);
   return b;
 }
@@ -517,16 +649,16 @@ function noteMark(s) {
 // fills {title} and {body} in book.feedback_url (e.g. a GitHub "new issue" link), URL-encoded;
 // s = the sentence (optional), n = the note being answered (optional)
 function feedbackHref(tpl, s, n) {
-  let title = "Uwaga czytelnika", body = "**Co jest nie tak?** (transkrypcja / tłumaczenie / gramatyka)\n\n";
+  let title = t("fbTitle"), body = `${t("fbWhat")}\n\n`;
   if (s) {
     const lang = $("lang").value, tr = s[lang] != null ? lang : "pl";
-    title = `${n ? "Uwaga czytelnika" : "Błąd"}: ${s.id}`;
+    title = `${n ? t("fbTitle") : t("fbError")}: ${s.id}`;
     body = [
-      `**Zdanie:** ${s.id} (${book.book.title}, s. ${pageOf(s)})`,
-      `**Oryginał:** ${s.src}`,
-      s[tr] != null ? `**Tłumaczenie (${tr.toUpperCase()}):** ${s[tr]}` : null,
-      n ? `**Uwaga (${NOTE_KIND[n.kind] || n.kind}):** ${n.pl}` : null,
-      "", n ? "**Moja odpowiedź:**" : "**Co jest nie tak?** (transkrypcja / tłumaczenie / gramatyka)", "", "",
+      `**${t("fbSentence")}:** ${s.id} (${book.book.title}, ${t("page")} ${pageOf(s)})`,
+      `**${t("fbOriginal")}:** ${s.src}`,
+      s[tr] != null ? `**${t("fbTranslation")} (${tr.toUpperCase()}):** ${s[tr]}` : null,
+      n ? `**${t("fbNote")} (${ui().kinds[n.kind] || n.kind}):** ${(lang === "en" && n.en) || n.pl}` : null,
+      "", n ? t("fbAnswer") : t("fbWhat"), "", "",
     ].filter(l => l !== null).join("\n");
   }
   return tpl.split("{title}").join(encodeURIComponent(title)).split("{body}").join(encodeURIComponent(body));
@@ -537,11 +669,11 @@ function showNotes(el) {
   const s = byId[el.closest("[data-sid]").dataset.sid];
   if (!s || !s.notes) return;
   const lang = $("lang").value, url = book.book.feedback_url;
-  const html = `<div class="hd"><b>${esc(s.id)}</b><span class="tag">s. ${esc(pageOf(s))}</span></div>` +
+  const html = `<div class="hd"><b>${esc(s.id)}</b><span class="tag">${t("page")} ${esc(pageOf(s))}</span></div>` +
     s.notes.map(n =>
-      `<div class="note${n.doubt ? " q" : ""}"><span class="tag${n.doubt ? " q" : ""}">${n.doubt ? "wątpliwość" : "uwaga"}</span>` +
-      `<span class="tag">${esc(NOTE_KIND[n.kind] || n.kind)}</span><p>${esc((lang === "en" && n.en) || n.pl)}</p>` +
-      (n.doubt && url ? `<a class="fb" href="${esc(feedbackHref(url, s, n))}" target="_blank" rel="noopener">Znasz odpowiedź? Zgłoś</a>` : "") +
+      `<div class="note${n.doubt ? " q" : ""}"><span class="tag${n.doubt ? " q" : ""}">${n.doubt ? t("doubt") : t("remark")}</span>` +
+      `<span class="tag">${esc(ui().kinds[n.kind] || n.kind)}</span><p>${esc((lang === "en" && n.en) || n.pl)}</p>` +
+      (n.doubt && url ? `<a class="fb" href="${esc(feedbackHref(url, s, n))}" target="_blank" rel="noopener">${t("answer")}</a>` : "") +
       `</div>`).join("");
   openPop("notes", s.id, html, el);
 }
