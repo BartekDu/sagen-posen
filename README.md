@@ -11,8 +11,8 @@ znaczeniem pod każdym słowem i z długimi słowami podzielonymi na części (h
 kartę. Kliknięcie słowa w karcie pokazuje jego pełną gramatykę: znaczenie części, formę i pochodzenie. **Alt+klik** na
 słowo w tekście otwiera ją od razu.
 
-**Wersja 1.0** zawiera okładkę i strony 3–31 książki: legendy 1–44, 584 zdania z tłumaczeniem na polski i angielski
-oraz z opisem gramatyki. Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia i opisy gramatyczne
+**Wersja 1.2** zawiera okładkę i strony 3–41 książki: legendy 1–56, 772 zdania z tłumaczeniem na polski i angielski
+oraz z opisem gramatyki (po polsku i po angielsku). Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia i opisy gramatyczne
 przygotowują agenci AI. Mogą być błędy, więc zgłoszenia są mile widziane.
 
 ## Znalazłeś błąd albo znasz odpowiedź?

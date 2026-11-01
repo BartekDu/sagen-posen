@@ -289,10 +289,41 @@ function cyrb53(str) {
 const isEN = () => $("lang").value === "en" && EN && Object.keys(EN).length > 0;
 // a note in the reader's language: English when there is a translation, else the Polish original
 const L = (pl, ctx = "") => (pl && isEN() && EN[cyrb53(`${ctx}\u0001${pl}`)]) || pl;
-function loadEN() {
-  if (EN || $("lang").value !== "en") return;
-  EN = {};  // only one request, even if it fails
-  fetch(`books/${bookId}/grammar-en.json`).then(r => r.ok ? r.json() : {}).then(d => { EN = d; }).catch(() => {});
+function loadEN() {  // English mode: fetch the English notes of the pages already on screen
+  if ($("lang").value === "en") prefetchVisible();
+}
+
+// ---- grammar is stored per scan page (g/pNNN.json, en/pNNN.json; see build_book.py): s.gp names the file ----
+const gDone = new Set(), enDone = new Set(), gLoading = {}, enLoading = {};
+const pad3 = (n) => String(n).padStart(3, "0");
+function loadGrammar(pg) {
+  if (!pg) return Promise.resolve();
+  gLoading[pg] ??= fetch(`books/${bookId}/g/p${pad3(pg)}.json`).then(r => r.ok ? r.json() : {})
+    .then(d => { for (const [sid, g] of Object.entries(d)) if (byId[sid]) byId[sid].g = g; }).catch(() => {})
+    .finally(() => gDone.add(pg));
+  const en = $("lang").value === "en"
+    ? (enLoading[pg] ??= fetch(`books/${bookId}/en/p${pad3(pg)}.json`).then(r => r.ok ? r.json() : {})
+        .then(d => { EN = Object.assign(EN || {}, d); }).catch(() => {}).finally(() => enDone.add(pg)))
+    : null;
+  return Promise.all([gLoading[pg], en]);
+}
+// true while this sentence's grammar (or, in English mode, its English) is not loaded yet
+const pending = (s) => s && s.gp && (!gDone.has(s.gp) || ($("lang").value === "en" && !enDone.has(s.gp)));
+// load the grammar of the pages around what is on screen in the digital text, so a card opens at once
+let prefetchTimer = null;
+function prefetchVisible() {
+  clearTimeout(prefetchTimer);
+  prefetchTimer = setTimeout(() => {
+    const pane = $("src").closest(".scroll"), r = pane.getBoundingClientRect();
+    const pages = new Set();
+    for (const el of pane.querySelectorAll("[data-sid]")) {
+      const b = el.getBoundingClientRect();
+      if (b.bottom < r.top - 400) continue;
+      if (b.top > r.bottom + 400) break;
+      const s = byId[el.dataset.sid]; if (s && s.gp) pages.add(s.gp);
+    }
+    pages.forEach(loadGrammar);
+  }, 250);
 }
 const t = (k) => ui()[k];
 const plOnly = () => t("plOnly") && !isEN() ? `<p class="plonly">${t("plOnly")}</p>` : "";
@@ -430,6 +461,7 @@ function render() {
     if (save) storeSet("pr-lang", lang.value);  // only a choice the reader made is remembered; otherwise follow the browser
     paint(); if (popKind) hidePop(); loadEN(); };  // an open card would stay in the old language
   lang.onchange = () => fillTr(true); fillTr(false);
+  prefetchVisible();  // grammar of the first pages, before anyone asks for it
   const gmode = $("gmode");
   gmode.checked = storeGet("pr-gmode") === "1";
   const setG = () => { document.body.classList.toggle("gmode", gmode.checked); storeSet("pr-gmode", gmode.checked ? "1" : "0"); };
@@ -486,7 +518,7 @@ $("pop").addEventListener("click", (e) => {
 for (const sc of document.querySelectorAll(".scroll"))
   sc.addEventListener("scroll", () => {
     if (popKind && sc.contains(popAnchor)) place(popAnchor);
-    if (sc.querySelector("#src")) trackReading(sc);
+    if (sc.querySelector("#src")) { trackReading(sc); prefetchVisible(); }
   }, { passive: true });
 
 function paint() {
@@ -574,6 +606,7 @@ function showWord(el) {
 
 // fromSentence: opened by a click in the sentence card's grid, so it keeps that card's place and gets "← zdanie"
 function wordCard(sid, wi, anchor, fromSentence = false) {
+  if (pending(byId[sid])) { loadGrammar(byId[sid].gp).then(() => wordCard(sid, wi, anchor, fromSentence)); return; }
   const s = byId[sid], g = s && s.g, w = g && g.words[wi];
   if (!w) return;
   const ph = w.phrase != null ? g.phrases[w.phrase] : null;
@@ -598,6 +631,10 @@ function wordCard(sid, wi, anchor, fromSentence = false) {
 
 function showSentence(sid, anchor, force) {
   if (popKind === "sentence" && popKey === sid && !force) return;
+  if (pending(byId[sid])) {  // not loaded yet (a fast jump): open it when it arrives, if still wanted
+    loadGrammar(byId[sid].gp).then(() => { if (force || hovered === sid) showSentence(sid, anchor, force); });
+    return;
+  }
   const s = byId[sid], g = s && s.g;
   if (!g) {
     openPop("sentence", sid, `<p class="muted" style="margin:0">${t("noGrammar")}</p>`, anchor);
