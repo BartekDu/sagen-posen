@@ -13,6 +13,26 @@
  },
  "pages": [
   {
+   "n": 1,
+   "img": "pages/p001.jpg",
+   "w": 356.6499938964844,
+   "h": 518.4000244140625,
+   "caption": {
+    "pl": "Okładka: „Sagen der Provinz Posen”, Professor Otto Knoop.",
+    "en": "Cover: “Sagen der Provinz Posen”, Professor Otto Knoop."
+   }
+  },
+  {
+   "n": 2,
+   "img": "pages/p002.jpg",
+   "w": 356.6499938964844,
+   "h": 518.1499633789062,
+   "caption": {
+    "pl": "Wyklejka z pieczęcią „Eigentum der kath. Schule zu Obra, Kreis Bomst”: ten egzemplarz należał do szkoły katolickiej w Obrze (pow. babimojski).",
+    "en": "Endpaper stamped “Eigentum der kath. Schule zu Obra, Kreis Bomst”: this copy belonged to the Catholic school in Obra (Bomst district)."
+   }
+  },
+  {
    "n": 3,
    "img": "pages/p003.jpg",
    "w": 360.0,

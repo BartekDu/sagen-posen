@@ -76,6 +76,7 @@ main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 1;
 .rg.hl { background: var(--hl-strong); }
 .pin { background: var(--pin) !important; }
 .empty { color: var(--muted); font-style: italic; }
+.cap { margin: -4px 10px 14px; color: var(--muted); font: italic 13px/1.4 system-ui, sans-serif; text-align: center; }
 /* reader notes: small badge after a sentence; "?" = open doubt (asks readers for help), "i" = editorial note */
 .nm { display: inline-block; min-width: 15px; height: 15px; margin: 0 1px 0 3px; padding: 0 3px; vertical-align: 5px;
   border: 1px solid var(--muted); border-radius: 99px; background: var(--panel); color: var(--muted); text-indent: 0;
@@ -215,6 +216,12 @@ function render() {
     const div = document.createElement("div");
     div.className = "page"; div.dataset.page = p.n;
     div.innerHTML = `<img src="books/${bookId}/${p.img}" alt="Strona ${p.n}" loading="lazy"><span class="no">s. ${p.n}</span>`;
+    if (p.caption) {
+      const cap = document.createElement("p"); cap.className = "cap";
+      const fillCap = () => { cap.textContent = p.caption[$("lang").value] || p.caption.pl || p.caption.en; };
+      $("lang").addEventListener("change", fillCap); fillCap();
+      scan.appendChild(div); scan.appendChild(cap); continue;  // image-only pages have no sentence boxes
+    }
     for (const s of sentences) for (const r of s.regions) if (r.page === p.n) {
       const box = document.createElement("div");
       box.className = "rg"; box.dataset.sid = s.id;
