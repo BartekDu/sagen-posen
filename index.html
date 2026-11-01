@@ -34,18 +34,25 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
   font: 16px/1.6 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
-header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 10px 16px;
+header { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; padding: 10px 16px;
   border-bottom: 1px solid var(--line); font-family: system-ui, sans-serif; font-size: 14px; }
 header h1 { font-size: 17px; margin: 0; }
 header .meta { color: var(--muted); }
 header .spacer { flex: 1; }
+@media (min-width: 1000px) {  /* one header row on desktop: the book meta gives way first */
+  header { flex-wrap: nowrap; }
+  header > * { flex-shrink: 0; white-space: nowrap; }
+  header .meta { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
 header label { color: var(--muted); }
 header a { color: var(--accent); font-weight: 600; text-decoration: none; }
 header a:hover { text-decoration: underline; }
-header a.support { padding: 1px 10px; border: 1px solid var(--accent); border-radius: 99px; }
+header a.support { padding: 2px 11px; border-radius: 99px; background: #ffdd00; color: #0d0c22; font-size: 13px; }
+header a.support:hover { text-decoration: none; filter: brightness(1.05); }
 select, button { font: inherit; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
   border-radius: 6px; padding: 3px 8px; }
-main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: calc(100% - 49px); }
+body { display: flex; flex-direction: column; }  /* header may wrap on narrow screens; panels take the rest */
+main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 1; min-height: 0; }
 .col { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
 .col:last-child { border-right: 0; }
 .col h2 { margin: 0; padding: 6px 16px; font: 600 12px/1.6 system-ui, sans-serif; letter-spacing: .06em;
@@ -143,7 +150,7 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
   <label title="Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)"><input type="checkbox" id="gmode"> gramatyka po kliknięciu</label>
   <label><input type="checkbox" id="sync" checked> przewijaj razem</label>
   <a id="report" target="_blank" rel="noopener" hidden title="Kliknij zdanie, żeby je przypiąć: zgłoszenie od razu je zawiera">Zgłoś błąd</a>
-  <a id="support" class="support" target="_blank" rel="noopener" hidden>☕ Postaw kawę</a>
+  <a id="support" class="support" target="_blank" rel="noopener" hidden>☕ Buy me a coffee</a>
 </header>
 <main>
   <section class="col"><h2>Oryginał (skan)</h2><div class="scroll" id="scan"></div></section>
@@ -161,6 +168,23 @@ let popKind = null, popKey = null, popAnchor = null; // kind: "word" | "sentence
 
 function storeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function storeSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+// analytics (Umami, no cookies): no-op until its script has loaded; each popup counts once per visit
+const tracked = new Set();
+function track(name, data) { try { window.umami?.track(name, data); } catch {} }
+function trackOnce(name, key) { if (!tracked.has(name + key)) { tracked.add(name + key); track(name); } }
+// "which book page is being read": a virtual page view per scan page, so Umami reports views and time per page
+let readPage = null, readTimer = null;
+function trackReading(pane) {
+  clearTimeout(readTimer);
+  readTimer = setTimeout(() => {
+    const top = pane.getBoundingClientRect().top + 40;
+    const el = [...pane.querySelectorAll("[data-sid]")].find(n => n.getBoundingClientRect().bottom > top);
+    const page = el && pageOf(byId[el.dataset.sid]);
+    if (!page || page === readPage) return;
+    readPage = page;
+    try { window.umami?.track(p => ({ ...p, url: `${location.pathname}#s${page}`, title: `${book.book.title} · s. ${page}` })); } catch {}
+  }, 2000);
+}
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 fetch(`books/${bookId}/book.json`).then(r => r.json()).then(b => { book = b; render(); });
@@ -169,8 +193,15 @@ function render() {
   const { book: meta, pages, blocks, sentences } = book;
   document.title = `${meta.title} · Parallel Reader`;
   $("title").textContent = meta.title;
-  $("meta").textContent = `${meta.author}, ${meta.year} · ${meta.license}`;
+  $("meta").textContent = $("meta").title = `${meta.author}, ${meta.year} · ${meta.license}`;
   if (meta.support_url) { $("support").href = meta.support_url; $("support").hidden = false; }
+  if (meta.umami_id) {
+    const sc = document.createElement("script");
+    sc.defer = true; sc.src = "https://cloud.umami.is/script.js"; sc.dataset.websiteId = meta.umami_id;
+    document.head.appendChild(sc);
+  }
+  $("support").addEventListener("click", () => track("support"));
+  $("report").addEventListener("click", () => track("report", { sid: pinned || "" }));
   if (meta.feedback_url) {  // the report link carries the pinned sentence, if any
     const report = $("report"); report.hidden = false;
     const update = () => { report.href = feedbackHref(meta.feedback_url, pinned && byId[pinned]); };
@@ -276,7 +307,10 @@ document.addEventListener("click", (e) => {
 });
 // keep the popup on its word when that panel scrolls (sync-scroll moves the *other* panels, so ignore those)
 for (const sc of document.querySelectorAll(".scroll"))
-  sc.addEventListener("scroll", () => { if (popKind && sc.contains(popAnchor)) place(popAnchor); }, { passive: true });
+  sc.addEventListener("scroll", () => {
+    if (popKind && sc.contains(popAnchor)) place(popAnchor);
+    if (sc.querySelector("#src")) trackReading(sc);
+  }, { passive: true });
 
 function paint() {
   document.querySelectorAll(".hl, .pin").forEach(n => n.classList.remove("hl", "pin"));
@@ -333,7 +367,7 @@ function place(anchor) {
 
 function openPop(kind, key, html, anchor) {
   const pop = $("pop");
-  clearMarks(); popKind = kind; popKey = key; popAnchor = anchor;
+  clearMarks(); popKind = kind; popKey = key; popAnchor = anchor; trackOnce(`pop-${kind}`, key);
   const title = { word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji" }[kind];
   pop.innerHTML = `<div class="kind"><span>${title}</span>` +
     `<button type="button" aria-label="Zamknij" onclick="hidePop()">×</button></div><div class="bd">${html}</div>`; pop.scrollTop = 0; pop.classList.add("on"); place(anchor);
