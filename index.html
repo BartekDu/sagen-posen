@@ -109,6 +109,28 @@ body.alt .w:hover, body.gmode .w:hover { box-shadow: inset 0 -2px var(--phrase);
 #pop .hd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 #pop .hd b { font: 700 19px/1.3 Georgia, serif; }
 #pop .lemma { color: var(--pop-muted); }
+#pop .gl { margin: 0 0 6px; font: 600 16px/1.35 system-ui, sans-serif; }
+#pop .cl .gl { margin: 2px 0 0; font-size: 13.5px; }
+#pop .lit { margin: 0 0 8px; padding: 6px 9px; background: var(--pop-soft); border-radius: 4px; }
+/* sentence card, word by word: each German word with its short Polish meaning underneath, underlined in its
+   clause's colour (the full meaning is in the Alt+click word card) */
+#pop .il { display: flex; flex-wrap: wrap; gap: 6px 4px; margin: 0 0 10px; }
+#pop .il span:hover { background: var(--pop-soft); border-radius: 3px; cursor: pointer; }
+#pop .dot { color: var(--pop-muted); font-weight: 400; }
+#pop .parts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; margin: 0 0 8px; padding: 6px 9px;
+  background: var(--pop-soft); border-radius: 4px; }
+#pop .parts b { font: 600 15px/1.35 Georgia, serif; }
+#pop .kind .back { margin-right: auto; margin-left: 10px; padding: 0 8px; font-size: 12px; }
+#pop .il span { display: inline-flex; flex-direction: column; align-items: center; padding: 0 2px 1px;
+  border-bottom: 2px solid transparent; }
+#pop .il b { font: 600 15px/1.25 Georgia, serif; }
+#pop .il b.v { color: var(--pop-head); }
+#pop .il small { max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 11.5px/1.2 system-ui, sans-serif; color: var(--pop-muted); }
+#pop .il span[data-c="0"] { border-color: var(--c0); } #pop .il span[data-c="1"] { border-color: var(--c1); }
+#pop .il span[data-c="2"] { border-color: var(--c2); } #pop .il span[data-c="3"] { border-color: var(--c3); }
+#pop .il span[data-c="4"] { border-color: var(--c4); } #pop .il span[data-c="5"] { border-color: var(--c5); }
+#pop.stuck .kind span::after { content: " · przypięte (Esc zamyka)"; font-weight: 400; opacity: .8; }
 #pop .tag { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--pop-line); color: var(--pop-muted); }
 #pop .tag.k { color: #fff; background: var(--pop-head); border-color: var(--pop-head); }
 #pop dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 6px 0 0; }
@@ -159,13 +181,13 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
   <section class="col"><h2 id="trh">Tłumaczenie</h2><div class="scroll"><div class="text" id="tr"></div></div></section>
 </main>
 <div id="pop" role="dialog" aria-live="polite"></div>
-<footer class="hint">Najedź: zdanie we wszystkich panelach · klik: przypnij · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · <kbd>Ctrl</kbd>+najedź: gramatyka zdania · klik na <b>?</b>/<b>i</b>: uwagi</footer>
+<footer class="hint">Najedź: zdanie we wszystkich panelach · klik: przypnij · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · <kbd>Ctrl</kbd>+najedź: gramatyka zdania (<kbd>Ctrl</kbd>+klik: przypnij) · klik na <b>?</b>/<b>i</b>: uwagi</footer>
 <script>
 const params = new URLSearchParams(location.search);
 const bookId = params.get("book") || "sagen-posen";
 const $ = (id) => document.getElementById(id);
 let book, byId, pinned = null, hovered = null, hoverEl = null, scrollTimer = null;
-let popKind = null, popKey = null, popAnchor = null; // kind: "word" | "sentence" | "notes"
+let popKind = null, popKey = null, popAnchor = null, popStuck = false, popBeside = false, popBack = null; // kind: "word" | "sentence" | "notes"
 
 function storeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function storeSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
@@ -185,6 +207,13 @@ function trackReading(pane) {
     readPage = page;
     try { window.umami?.track(p => ({ ...p, url: `${location.pathname}#s${page}`, title: `${book.book.title} · s. ${page}` })); } catch {}
   }, 2000);
+}
+// the word-by-word line in the sentence card shows only the head of a gloss: "mu (= jemu)" -> "mu", "gra → razem z »auf«: ..." -> "gra",
+// "(rodzajnik »ten«; po polsku pomijamy)" -> "(rodzajnik)"
+function shortGloss(g) {
+  g = g.trim();
+  if (g.startsWith("(")) return `(${g.slice(1).split(/[;,:„“"»«)]/)[0].trim()})`;
+  return g.split(/\s*[;(→]/)[0].trim() || g;
 }
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -272,23 +301,24 @@ function render() {
   gmode.checked = storeGet("pr-gmode") === "1";
   const setG = () => { document.body.classList.toggle("gmode", gmode.checked); storeSet("pr-gmode", gmode.checked ? "1" : "0"); };
   gmode.onchange = setG; setG();
-
   // one delegated handler for all three panels
   for (const root of [scan, $("src"), $("tr")]) {
     root.addEventListener("mouseover", (e) => {
       const el = e.target.closest("[data-sid]"); if (!el) return;
       hoverEl = el;
-      if (e.ctrlKey || e.metaKey) showSentence(el.dataset.sid, el);
+      if ((e.ctrlKey || e.metaKey) && !popStuck) showSentence(el.dataset.sid, el);
       if (hovered === el.dataset.sid) return;
       hovered = el.dataset.sid; paint(); scheduleScroll(root);
     });
-    root.addEventListener("mouseleave", () => {
+    root.addEventListener("mouseleave", (e) => {
       hovered = null; hoverEl = null; paint();
-      if (popKind === "sentence") hidePop();
+      if (popKind === "sentence" && !popStuck && !e.relatedTarget?.closest?.("#pop")) hidePop();  // moving into the card keeps it
     });
     root.addEventListener("click", (e) => {
       const nm = e.target.closest(".nm");
       if (nm) { e.preventDefault(); showNotes(nm); return; }  // badge click never pins the sentence
+      const se = (e.ctrlKey || e.metaKey) && e.target.closest("[data-sid]");
+      if (se) { e.preventDefault(); popStuck = false; showSentence(se.dataset.sid, se, true); stickPop(); return; }
       const w = e.target.closest(".w");
       if (w && (e.altKey || gmode.checked)) { e.preventDefault(); showWord(w); return; }
       const el = e.target.closest("[data-sid]"); if (!el) return;
@@ -300,17 +330,26 @@ function render() {
 // Alt: stop Windows browsers from moving focus to their menu; Ctrl pressed while already hovering opens the sentence card
 addEventListener("keydown", (e) => {
   if (e.key === "Alt") { e.preventDefault(); document.body.classList.add("alt"); }
-  if ((e.key === "Control" || e.key === "Meta") && hoverEl && !e.repeat) showSentence(hoverEl.dataset.sid, hoverEl);
+  if ((e.key === "Control" || e.key === "Meta") && hoverEl && !e.repeat && !popStuck) showSentence(hoverEl.dataset.sid, hoverEl);
   if (e.key === "Escape") hidePop();
 });
 addEventListener("keyup", (e) => {
   if (e.key === "Alt") document.body.classList.remove("alt");
-  if ((e.key === "Control" || e.key === "Meta") && popKind === "sentence") hidePop();
+  if ((e.key === "Control" || e.key === "Meta") && popKind === "sentence" && !popStuck) {
+    if ($("pop").matches(":hover")) stickPop(); else hidePop();  // let go of Ctrl over the card: it stays for scrolling
+  }
 });
-addEventListener("blur", () => { document.body.classList.remove("alt"); if (popKind === "sentence") hidePop(); });
+addEventListener("blur", () => { document.body.classList.remove("alt"); if (popKind === "sentence" && !popStuck) hidePop(); });
 document.addEventListener("click", (e) => {
   if (popKind === "word" && !e.target.closest("#pop") && !e.target.closest(".w")) hidePop();
   if (popKind === "notes" && !e.target.closest("#pop") && !e.target.closest(".nm")) hidePop();
+  if (popKind === "sentence" && popStuck && !e.target.closest("#pop") && !e.ctrlKey && !e.metaKey) hidePop();
+});
+$("pop").addEventListener("mousedown", () => { if (popKind === "sentence") stickPop(); });
+// a word in the sentence card's grid opens its word card in the same place ("← zdanie" goes back)
+$("pop").addEventListener("click", (e) => {
+  const gw = popKind === "sentence" && e.target.closest(".il [data-wi]");
+  if (gw) { e.stopPropagation(); wordCard(popKey, +gw.dataset.wi, popAnchor, true); }  // its node is replaced: outside-click checks would misfire
 });
 // keep the popup on its word when that panel scrolls (sync-scroll moves the *other* panels, so ignore those)
 for (const sc of document.querySelectorAll(".scroll"))
@@ -352,15 +391,17 @@ function clearMarks() {
 }
 
 function hidePop() {
-  const pop = $("pop"); pop.classList.remove("on"); popKind = popKey = popAnchor = null; clearMarks();
+  const pop = $("pop"); pop.classList.remove("on", "stuck"); popKind = popKey = popAnchor = null; popStuck = false; clearMarks();
 }
+
+function stickPop() { popStuck = true; $("pop").classList.add("stuck"); }
 
 // word card: under the word. Sentence card: beside the sentence's column, so the coloured clauses stay visible.
 function place(anchor) {
   const pop = $("pop"), r = anchor.getBoundingClientRect(), pr = pop.getBoundingClientRect();
   const col = anchor.closest(".col").getBoundingClientRect();
   let top, left;
-  if (popKind === "sentence" && innerWidth > 900) {
+  if ((popKind === "sentence" || popBeside) && innerWidth > 900) {
     left = col.right + pr.width + 8 <= innerWidth ? col.right + 8 : col.left - pr.width - 8;
     top = Math.min(Math.max(8, r.top), innerHeight - pr.height - 8);
   } else {
@@ -372,33 +413,61 @@ function place(anchor) {
   Object.assign(pop.style, { top: `${top}px`, left: `${left}px` });
 }
 
-function openPop(kind, key, html, anchor) {
+// back: the sentence id to return to (a word card opened from the sentence card's word-by-word grid)
+function openPop(kind, key, html, anchor, back = null) {
   const pop = $("pop");
-  clearMarks(); popKind = kind; popKey = key; popAnchor = anchor; trackOnce(`pop-${kind}`, key);
+  clearMarks(); popKind = kind; popKey = key; popAnchor = anchor; popBack = back; popBeside = !!back;
+  trackOnce(`pop-${kind}`, key);
   const title = { word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji" }[kind];
   pop.innerHTML = `<div class="kind"><span>${title}</span>` +
+    (back ? `<button type="button" class="back" onclick="event.stopPropagation(); backToSentence()">← zdanie</button>` : "") +
     `<button type="button" aria-label="Zamknij" onclick="hidePop()">×</button></div><div class="bd">${html}</div>`; pop.scrollTop = 0; pop.classList.add("on"); place(anchor);
 }
 
+function backToSentence() {
+  const sid = popBack, anchor = popAnchor;
+  showSentence(sid, anchor, true); stickPop();
+}
+
+// a cognate note "ang. here" reads "jak angielskie here": the language spelled out, the word in italics
+const LANGS = { "ang.": "angielskie", "pol.": "polskie", "łac.": "łacińskie", "fr.": "francuskie", "gr.": "greckie" };
+function relText(rel) {
+  const m = rel.match(/^\s*(\S+\.)\s*(.*)$/);
+  return m && LANGS[m[1]] ? `jak ${LANGS[m[1]]} <i>${esc(m[2])}</i>` : esc(rel);
+}
+
+// "her·bei·zu·locken": the word with dots between its parts (pipeline/parts.py), or just the word
+const dotted = (w) => w.parts ? w.parts.map(p => esc(p.p)).join('<span class="dot">·</span>') : esc(w.t);
+
 function showWord(el) {
-  const sid = el.closest("[data-sid]").dataset.sid, s = byId[sid], wi = +el.dataset.wi;
-  const g = s.g, w = g && g.words[wi];
+  wordCard(el.closest("[data-sid]").dataset.sid, +el.dataset.wi, el);
+}
+
+// fromSentence: opened by a click in the sentence card's grid, so it keeps that card's place and gets "← zdanie"
+function wordCard(sid, wi, anchor, fromSentence = false) {
+  const s = byId[sid], g = s && s.g, w = g && g.words[wi];
   if (!w) return;
   const ph = w.phrase != null ? g.phrases[w.phrase] : null;
   const rows = [["Forma", w.morph], ["Dlaczego", w.why], ["Odmiana", w.forms], ["Budowa", w.formation],
     ["Skojarzenia", w.related], ["Dawniej", w.old]].filter(([, v]) => v);
   openPop("word", `${sid}:${wi}`,
-    `<div class="hd"><b>${esc(w.t)}</b>${w.lemma && w.lemma !== w.t ? `<span class="lemma">← ${esc(w.lemma)}</span>` : ""}` +
+    `<div class="hd"><b>${dotted(w)}</b>${w.lemma && w.lemma !== w.t ? `<span class="lemma">← ${esc(w.lemma)}</span>` : ""}` +
     `${w.pos ? `<span class="tag">${esc(w.pos)}</span>` : ""}</div>` +
+    (w.gloss ? `<div class="gl">${esc(w.gloss)}</div>` : "") +
+    (w.parts ? `<div class="parts">${w.parts.map(p => `<b>${esc(p.p)}</b><span>${esc(p.g).replace(/(^|[\s(])ang\. /g, "$1angielskie ")}` +
+      `${p.rel ? ` <span class="muted">(${relText(p.rel)})</span>` : ""}</span>`).join("")}</div>` : "") +
     `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` +
     (ph ? `<div class="box"><b>${esc(ph.label)}</b>: <i>${esc(rangeText(s, ph.w))}</i><br>${esc(ph.note)}</div>` : "") +
-    `<p class="muted" style="margin:8px 0 0">Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.</p>`, el);
-  srcWords(sid).forEach((n, i) => { if (ph && inRanges(i, ph.w)) n.classList.add("wphr"); });
-  el.classList.add("wsel");
+    (fromSentence ? "" : `<p class="muted" style="margin:8px 0 0">Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.</p>`),
+    anchor, fromSentence ? sid : null);
+  srcWords(sid).forEach((n, i) => {
+    if (ph && inRanges(i, ph.w)) n.classList.add("wphr");
+    if (i === wi) n.classList.add("wsel");
+  });
 }
 
-function showSentence(sid, anchor) {
-  if (popKind === "sentence" && popKey === sid) return;
+function showSentence(sid, anchor, force) {
+  if (popKind === "sentence" && popKey === sid && !force) return;
   const s = byId[sid], g = s && s.g;
   if (!g) {
     openPop("sentence", sid, `<p class="muted" style="margin:0">Brak opisu gramatyki dla tego zdania.</p>`, anchor);
@@ -406,15 +475,23 @@ function showSentence(sid, anchor) {
   }
   const st = g.sentence || {};
   const clauses = st.clauses || [];
+  const il = g.words.some(w => w.gloss) ? `<div class="il">${g.words.map((w, i) => {
+      const ci = clauses.findIndex(c => inRanges(i, c.w)), v = ci >= 0 && inRanges(i, clauses[ci].verb);
+      return `<span data-wi="${i}"${ci >= 0 ? ` data-c="${ci % 6}"` : ""} title="${esc(w.gloss || "")} · kliknij: szczegóły">` +
+        `<b${v ? ' class="v"' : ""}>${dotted(w)}</b>` +
+        `<small>${esc(w.gloss ? shortGloss(w.gloss) : "·")}</small></span>`;
+    }).join("")}</div>` : "";
   const html =
     `<div class="hd">${[st.tense, st.mood, st.voice].filter(Boolean).map(t => `<span class="tag k">${esc(t)}</span>`).join("")}` +
-    `${st.type ? `<span class="tag">${esc(st.type)}</span>` : ""}</div>` +
+    `${st.type ? `<span class="tag">${esc(st.type)}</span>` : ""}</div>` + il +
+    (st.literal ? `<div class="lit"><b>Dosłownie:</b> ${esc(st.literal)}</div>` : "") +
     (st.summary ? `<div>${esc(st.summary)}</div>` : "") +
     clauses.map((c, ci) => {
       const words = [];
       for (const [a, z] of c.w) for (let i = a; i <= z; i++) words.push(i);
       const txt = words.map(i => inRanges(i, c.verb) ? `<b>${esc(wordText(s, i))}</b>` : esc(wordText(s, i))).join(" ");
       return `<div class="cl" data-c="${ci % 6}"><span class="muted">${esc(c.type)}</span><br><i>${txt}</i>` +
+        `${c.gloss ? `<div class="gl">→ ${esc(c.gloss)}</div>` : ""}` +
         `${c.note ? `<br>${esc(c.note)}` : ""}</div>`;
     }).join("") +
     (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "");

@@ -4,10 +4,16 @@
 
 Otto Knoop, *Sagen der Provinz Posen* (1913): podania i legendy z Wielkopolski. Trzy panele obok siebie:
 skan oryginału (gotyk/Fraktur), wersja cyfrowa i tłumaczenie na polski lub angielski. Najedź na zdanie, a podświetli się
-we wszystkich trzech. **Alt+klik** na słowo pokazuje jego gramatykę, **Ctrl+najechanie** na zdanie pokazuje budowę zdania.
+we wszystkich trzech.
 
-Wersja alfa: kolejne strony dochodzą na bieżąco. Transkrypcję, tłumaczenia i opisy gramatyczne przygotowują agenci AI
-(Claude) z niezależną recenzją, a ludzie je sprawdzają. Mogą być błędy.
+**Dla nieznających niemieckiego:** przytrzymaj **Ctrl** i najedź na zdanie. Karta pokaże je słowo po słowie, z polskim
+znaczeniem pod każdym słowem i z długimi słowami podzielonymi na części (her·bei·zu·locken). **Ctrl+klik** przypina
+kartę. Kliknięcie słowa w karcie pokazuje jego pełną gramatykę: znaczenie części, formę i pochodzenie. **Alt+klik** na
+słowo w tekście otwiera ją od razu.
+
+**Wersja 1.0** zawiera okładkę i strony 3–31 książki: legendy 1–44, 584 zdania z tłumaczeniem na polski i angielski
+oraz z opisem gramatyki. Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia i opisy gramatyczne
+przygotowują agenci AI (Claude) z niezależną recenzją, a ludzie je sprawdzają. Mogą być błędy, więc zgłoszenia są mile widziane.
 
 ## Znalazłeś błąd albo znasz odpowiedź?
 
