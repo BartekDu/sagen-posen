@@ -196,7 +196,7 @@ function render() {
   $("title").textContent = meta.title;
   $("meta").textContent = $("meta").title = `${meta.author}, ${meta.year} · ${meta.license}`;
   if (meta.support_url) { $("support").href = meta.support_url; $("support").hidden = false; }
-  if (meta.umami_id) {
+  if (meta.umami_id && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) {  // local previews don't count
     const sc = document.createElement("script");
     sc.defer = true; sc.src = "https://cloud.umami.is/script.js"; sc.dataset.websiteId = meta.umami_id;
     document.head.appendChild(sc);
