@@ -109,21 +109,6 @@ body.alt .w:hover, body.gmode .w:hover { box-shadow: inset 0 -2px var(--phrase);
 #pop .hd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 #pop .hd b { font: 700 19px/1.3 Georgia, serif; }
 #pop .lemma { color: var(--pop-muted); }
-#pop .gl { margin: 0 0 6px; font: 600 16px/1.35 system-ui, sans-serif; }
-#pop .cl .gl { margin: 2px 0 0; font-size: 13.5px; }
-#pop .lit { margin: 0 0 8px; padding: 6px 9px; background: var(--pop-soft); border-radius: 4px; }
-/* word-by-word: a short Polish meaning under every German word of the digital text (the full gloss is in the
-   Alt+click card). inline-flex keeps the word's baseline on the line, so punctuation stays next to it; the gloss is
-   capped so one long gloss can't push the words apart */
-body.ilin #src .w[data-gl] { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.3;
-  margin-bottom: 3px; border-radius: 3px; text-indent: 0; }  /* the paragraph indent would pad every word */
-body.ilin #src .w[data-gl]::after { content: attr(data-gl); max-width: 7.5em; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; font: 10.5px/1.2 system-ui, sans-serif; color: var(--muted); }
-/* a glossed sentence is highlighted word by word (the span's own background would only cover the top half) */
-body.ilin #src .hl:has(.w[data-gl]) { background: none; }
-body.ilin #src .pin:has(.w[data-gl]) { background: none !important; }
-body.ilin #src .hl .w[data-gl] { background: var(--hl); }
-body.ilin #src .pin .w[data-gl] { background: var(--pin); }
 #pop .tag { font-size: 11.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--pop-line); color: var(--pop-muted); }
 #pop .tag.k { color: #fff; background: var(--pop-head); border-color: var(--pop-head); }
 #pop dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 6px 0 0; }
@@ -164,7 +149,6 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
   <span class="spacer"></span>
   <label>Tłumaczenie <select id="lang"><option value="pl">polski</option><option value="en">English</option></select></label>
   <label title="Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)"><input type="checkbox" id="gmode"> gramatyka po kliknięciu</label>
-  <label title="Pod każdym niemieckim słowem jego znaczenie po polsku"><input type="checkbox" id="ilin"> słowo po słowie</label>
   <label><input type="checkbox" id="sync" checked> przewijaj razem</label>
   <a id="report" target="_blank" rel="noopener" hidden title="Kliknij zdanie, żeby je przypiąć: zgłoszenie od razu je zawiera">Zgłoś błąd</a>
   <a id="support" class="support" target="_blank" rel="noopener" hidden>☕ Postaw kawę</a>
@@ -201,13 +185,6 @@ function trackReading(pane) {
     readPage = page;
     try { window.umami?.track(p => ({ ...p, url: `${location.pathname}#s${page}`, title: `${book.book.title} · s. ${page}` })); } catch {}
   }, 2000);
-}
-// the word-by-word line shows only the head of a gloss: "mu (= jemu)" -> "mu", "gra → razem z »auf«: ..." -> "gra",
-// "(rodzajnik »ten«; po polsku pomijamy)" -> "(rodzajnik)"
-function shortGloss(g) {
-  g = g.trim();
-  if (g.startsWith("(")) return `(${g.slice(1).split(/[;,:„“"»«)]/)[0].trim()})`;
-  return g.split(/\s*[;(→]/)[0].trim() || g;
 }
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -271,8 +248,6 @@ function render() {
             if (a > at) span.appendChild(document.createTextNode(txt.slice(at, a)));
             const w = document.createElement("span");
             w.className = "w"; w.dataset.wi = wi; w.textContent = txt.slice(a, z);
-            const gw = s.g && s.g.words[wi];
-            if (gw && gw.gloss) w.dataset.gl = shortGloss(gw.gloss);
             span.appendChild(w); at = z;
           });
           if (at < txt.length) span.appendChild(document.createTextNode(txt.slice(at)));
@@ -297,10 +272,6 @@ function render() {
   gmode.checked = storeGet("pr-gmode") === "1";
   const setG = () => { document.body.classList.toggle("gmode", gmode.checked); storeSet("pr-gmode", gmode.checked ? "1" : "0"); };
   gmode.onchange = setG; setG();
-  const ilin = $("ilin");
-  ilin.checked = storeGet("pr-ilin") === "1";
-  const setI = () => { document.body.classList.toggle("ilin", ilin.checked); storeSet("pr-ilin", ilin.checked ? "1" : "0"); };
-  ilin.onchange = setI; setI();
 
   // one delegated handler for all three panels
   for (const root of [scan, $("src"), $("tr")]) {
@@ -419,7 +390,6 @@ function showWord(el) {
   openPop("word", `${sid}:${wi}`,
     `<div class="hd"><b>${esc(w.t)}</b>${w.lemma && w.lemma !== w.t ? `<span class="lemma">← ${esc(w.lemma)}</span>` : ""}` +
     `${w.pos ? `<span class="tag">${esc(w.pos)}</span>` : ""}</div>` +
-    (w.gloss ? `<div class="gl">${esc(w.gloss)}</div>` : "") +
     `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` +
     (ph ? `<div class="box"><b>${esc(ph.label)}</b>: <i>${esc(rangeText(s, ph.w))}</i><br>${esc(ph.note)}</div>` : "") +
     `<p class="muted" style="margin:8px 0 0">Całe zdanie: przytrzymaj <kbd>Ctrl</kbd> i najedź.</p>`, el);
@@ -439,14 +409,12 @@ function showSentence(sid, anchor) {
   const html =
     `<div class="hd">${[st.tense, st.mood, st.voice].filter(Boolean).map(t => `<span class="tag k">${esc(t)}</span>`).join("")}` +
     `${st.type ? `<span class="tag">${esc(st.type)}</span>` : ""}</div>` +
-    (st.literal ? `<div class="lit"><b>Dosłownie:</b> ${esc(st.literal)}</div>` : "") +
     (st.summary ? `<div>${esc(st.summary)}</div>` : "") +
     clauses.map((c, ci) => {
       const words = [];
       for (const [a, z] of c.w) for (let i = a; i <= z; i++) words.push(i);
       const txt = words.map(i => inRanges(i, c.verb) ? `<b>${esc(wordText(s, i))}</b>` : esc(wordText(s, i))).join(" ");
       return `<div class="cl" data-c="${ci % 6}"><span class="muted">${esc(c.type)}</span><br><i>${txt}</i>` +
-        `${c.gloss ? `<div class="gl">→ ${esc(c.gloss)}</div>` : ""}` +
         `${c.note ? `<br>${esc(c.note)}` : ""}</div>`;
     }).join("") +
     (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "");
