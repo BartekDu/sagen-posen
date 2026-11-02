@@ -16,12 +16,12 @@ słowo w tekście otwiera ją od razu.
 pada ta nazwa, a kliknięcie legendy otworzy tekst w tym miejscu. Każde miejsce ustalają dwaj agenci AI niezależnie od
 siebie. Punkty niepewne mają przerywaną obwódkę, a przybliżone są szare.
 
-**Wersja 1.5** zawiera okładkę i strony 3–151 książki: legendy 1–237, ok. 2990 zdań z tłumaczeniem na polski i
-angielski oraz z opisem gramatyki (po polsku i po angielsku). W zeskanowanym egzemplarzu brakuje kilku stron (m.in.
-55–58 i 97–98); miejsca te są oznaczone w tekście. Na mapie, przy przełączniku warstw, są też mapy i plany z czasów
-potopu szwedzkiego (1655–1696). Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia, opisy gramatyczne i mapę
-przygotowują agenci AI, a każdą partię sprawdza drugi, niezależny agent. Mogą być błędy, więc zgłoszenia są mile
-widziane.
+**Wersja 1.6** to cała książka: okładka, legendy 1–273, przypisy autora ze źródłami i indeks miejscowości. To ok. 4000
+zdań z tłumaczeniem na polski i angielski oraz z opisem gramatyki (po polsku i po angielsku). W zeskanowanym egzemplarzu
+brakuje kilku stron (m.in. 55–58 i 97–98); miejsca te są oznaczone w tekście, a uzupełnimy je z innego skanu. Na mapie,
+przy przełączniku warstw, są też mapy i plany z czasów potopu szwedzkiego (1655–1696). Transkrypcję, tłumaczenia, opisy
+gramatyczne i mapę przygotowują agenci AI, a każdą partię sprawdza drugi, niezależny agent. Mogą być błędy, więc
+zgłoszenia są mile widziane.
 
 ## Znalazłeś błąd albo znasz odpowiedź?
 
