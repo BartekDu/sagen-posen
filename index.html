@@ -189,6 +189,7 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
   <label data-i-title="gmodeTip"><input type="checkbox" id="gmode"> <span data-i="gmode"></span></label>
   <label><input type="checkbox" id="sync" checked> <span data-i="sync"></span></label>
   <a id="report" target="_blank" rel="noopener" hidden data-i="report" data-i-title="reportTip"></a>
+  <a id="mapLink" class="about" hidden data-i="map"></a>
   <a id="about" class="about" href="#about" data-i="about"></a>
   <a id="support" class="support" target="_blank" rel="noopener" hidden data-i="support"></a>
 </header>
@@ -204,6 +205,7 @@ kbd { font: 11px system-ui; border: 1px solid var(--line); border-bottom-width: 
 const params = new URLSearchParams(location.search);
 const bookId = params.get("book") || "sagen-posen";
 const $ = (id) => document.getElementById(id);
+let placesBySid = {};
 let book, byId, pinned = null, hovered = null, hoverEl = null, scrollTimer = null;
 let popKind = null, popKey = null, popAnchor = null, popStuck = false, popBeside = false, popBack = null; // kind: "word" | "sentence" | "notes"
 
@@ -212,7 +214,7 @@ const UI = {
   pl: {
     lang: "Tłumaczenie", gmode: "gramatyka po kliknięciu", gmodeTip: "Klik na słowo w wersji cyfrowej pokazuje gramatykę (bez Alt, np. na telefonie)",
     sync: "przewijaj razem", report: "Zgłoś błąd", reportTip: "Błąd w konkretnym zdaniu zgłosisz najszybciej z karty zdania (Ctrl+klik)", reportHere: "Zgłoś błąd w tym zdaniu",
-    about: "O projekcie", support: "☕ Postaw kawę", close: "Zamknij",
+    about: "O projekcie", support: "☕ Postaw kawę", close: "Zamknij", map: "🗺 Mapa", onMap: "na mapie",
     colScan: "Oryginał (skan)", colSrc: "Oryginał — wersja cyfrowa", colTr: "Tłumaczenie", page: "s.", pageAlt: "Strona",
     hint: "Najedź: zdanie we wszystkich panelach · <kbd>Ctrl</kbd>+najedź: zdanie słowo po słowie (<kbd>Ctrl</kbd>+klik: przypnij) · <kbd>Alt</kbd>+klik na słowo: gramatyka słowa · klik na <b>?</b>/<b>i</b>: uwagi",
     noTr: "[brak tłumaczenia]", word: "Gramatyka · słowo", sentence: "Gramatyka · zdanie", notes: "Uwagi redakcji",
@@ -241,7 +243,7 @@ ${b.support_url ? `<p>Jeśli czytnik Ci się przydał, możesz <a href="${esc(b.
   en: {
     lang: "Translation", gmode: "grammar on click", gmodeTip: "A click on a word in the digital text shows its grammar (no Alt needed, e.g. on a phone)",
     sync: "scroll together", report: "Report an error", reportTip: "For an error in one sentence, use the sentence card (Ctrl+click)", reportHere: "Report an error in this sentence",
-    about: "About", support: "☕ Buy me a coffee", close: "Close",
+    about: "About", support: "☕ Buy me a coffee", close: "Close", map: "🗺 Map", onMap: "on the map",
     colScan: "Original (scan)", colSrc: "Original — digital text", colTr: "Translation", page: "p.", pageAlt: "Page",
     hint: "Hover: the sentence in all panels · <kbd>Ctrl</kbd>+hover: the sentence word by word (<kbd>Ctrl</kbd>+click: pin) · <kbd>Alt</kbd>+click a word: its grammar · click <b>?</b>/<b>i</b>: notes",
     noTr: "[no translation yet]", word: "Grammar · word", sentence: "Grammar · sentence", notes: "Editor's notes",
@@ -403,6 +405,15 @@ function render() {
     report.addEventListener("mousedown", update); report.addEventListener("focus", update); update();
   }
   byId = Object.fromEntries(sentences.map(s => [s.id, s]));
+  // places mentioned in the legends (optional places.json): the map page, and links from the sentence card
+  fetch(`books/${bookId}/places.json`).then(r => r.ok ? r.json() : null).then(d => {
+    if (!d) return;
+    for (const pl of d.places) for (const sid of pl.sids) (placesBySid[sid] ??= []).push(pl);
+    const ml = $("mapLink"); ml.hidden = false;
+    const upd = () => { ml.href = `map.html?book=${bookId}&lang=${$("lang").value}`; };
+    ml.addEventListener("mousedown", upd); ml.addEventListener("focus", upd); upd();
+    ml.addEventListener("click", () => track("map"));
+  }).catch(() => {});
 
   // scan panel: page images + one absolutely positioned box per region
   const scan = $("scan");
@@ -487,6 +498,16 @@ function render() {
       const w = e.target.closest(".w");
       if (w && (e.altKey || gmode.checked)) { e.preventDefault(); showWord(w); return; }
     });
+  }
+  // index.html?s=s0123 (from the map): mark that sentence and bring it into view in every panel
+  const want = params.get("s");
+  if (want && byId[want]) {
+    pinned = want; paint();
+    const go = () => { for (const pane of document.querySelectorAll(".scroll")) {
+      const el = pane.querySelector(`[data-sid="${want}"]`); if (!el) continue;
+      pane.scrollTop += el.getBoundingClientRect().top - pane.getBoundingClientRect().top - pane.clientHeight / 3;
+    } };
+    [0, 400, 1200, 2500].forEach(ms => setTimeout(go, ms));  // scan images load lazily and move the boxes
   }
 }
 
@@ -663,6 +684,8 @@ function showSentence(sid, anchor, force) {
         `${c.note ? `<br>${esc(L(c.note))}` : ""}</div>`;
     }).join("") +
     (st.notes && st.notes.length ? `<ul>${st.notes.map(n => `<li>${esc(L(n))}</li>`).join("")}</ul>` : "") + plOnly() +
+    (placesBySid[sid] ? `<p class="places" style="margin:10px 0 0">${placesBySid[sid].filter(pl => pl.lat != null).map(pl =>
+      `<a href="map.html?book=${bookId}&lang=${$("lang").value}&place=${encodeURIComponent(pl.id)}" title="${t("onMap")}">📍 ${esc(pl.de[0])}</a>`).join(" · ")}</p>` : "") +
     (book.book.feedback_url ? `<p style="margin:10px 0 0"><a class="rep" href="${esc(feedbackHref(book.book.feedback_url, s))}"` +
       ` target="_blank" rel="noopener" onclick="track('report', { sid: '${sid}' })">${t("reportHere")}</a></p>` : "");
   openPop("sentence", sid, html, anchor);

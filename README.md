@@ -11,9 +11,16 @@ znaczeniem pod każdym słowem i z długimi słowami podzielonymi na części (h
 kartę. Kliknięcie słowa w karcie pokazuje jego pełną gramatykę: znaczenie części, formę i pochodzenie. **Alt+klik** na
 słowo w tekście otwiera ją od razu.
 
-**Wersja 1.2** zawiera okładkę i strony 3–41 książki: legendy 1–56, 772 zdania z tłumaczeniem na polski i angielski
-oraz z opisem gramatyki (po polsku i po angielsku). Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia i opisy gramatyczne
-przygotowują agenci AI. Mogą być błędy, więc zgłoszenia są mile widziane.
+**Mapa legend** (przycisk **🗺 Mapa**): miejsca z legend na mapie z epoki, czyli *Karte des Deutschen Reiches*
+1:100 000 (arkusze z lat ok. 1905–1909) nałożonej na OpenStreetMap. Kliknij pinezkę, żeby zobaczyć legendy, w których
+pada ta nazwa, a kliknięcie legendy otworzy tekst w tym miejscu. Każde miejsce ustalają dwaj agenci AI niezależnie od
+siebie. Punkty niepewne mają przerywaną obwódkę, a przybliżone są szare.
+
+**Wersja 1.3** zawiera okładkę i strony 3–81 książki: legendy 1–127, ok. 1560 zdań z tłumaczeniem na polski i
+angielski oraz z opisem gramatyki (po polsku i po angielsku). W zeskanowanym egzemplarzu brakuje stron 55–58 (legendy
+79–82). Kolejne strony dochodzą w następnych wersjach. Transkrypcję, tłumaczenia, opisy gramatyczne i mapę
+przygotowują agenci AI, a każdą partię sprawdza drugi, niezależny agent. Mogą być błędy, więc zgłoszenia są mile
+widziane.
 
 ## Znalazłeś błąd albo znasz odpowiedź?
 
@@ -23,5 +30,6 @@ pytania (np. polska nazwa miejscowości): kliknij **?** i „Znasz odpowiedź? Z
 
 ## Licencja
 
-Tekst oryginału jest w domenie publicznej (Otto Knoop zmarł w 1931 r.). To repozytorium zawiera tylko zbudowaną stronę;
+Tekst oryginału jest w domenie publicznej (Otto Knoop zmarł w 1931 r.). Mapa z epoki: SLUB Dresden / Deutsche Fotothek,
+Virtuelles Kartenforum (CC BY-SA 4.0 lub domena publiczna, zależnie od arkusza). Podkład: © autorzy OpenStreetMap. To repozytorium zawiera tylko zbudowaną stronę;
 jest aktualizowane automatycznie, więc zmiany wprowadzamy przez zgłoszenia, nie przez pull requesty.

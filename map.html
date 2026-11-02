@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa legend · Parallel Reader</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root { --bg: #f6f3ec; --panel: #fffdf8; --ink: #1f1d1a; --muted: #6b665d; --line: #e2dccf; --accent: #8a5a00; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #15140f; --panel: #1d1c17; --ink: #ece7dc; --muted: #9b958a; --line: #34322b; --accent: #f0b84a; } }
+:root[data-theme="dark"] { --bg: #15140f; --panel: #1d1c17; --ink: #ece7dc; --muted: #9b958a; --line: #34322b; --accent: #f0b84a; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; }
+header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font-size: 1.05em; margin: 0; }
+header a { color: var(--accent); }
+header .spacer { flex: 1; }
+header label { font-size: .92em; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.wrap { flex: 1; display: grid; grid-template-columns: 1fr 320px; min-height: 0; }
+#map { min-height: 300px; }
+aside { border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 8px 12px; }
+aside input { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); font: inherit; }
+aside ul { list-style: none; padding: 0; margin: 8px 0; }
+aside li { padding: 5px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+aside li:hover, aside li.on { background: var(--bg); }
+aside li small, .pp small { color: var(--muted); }
+.q { color: var(--accent); font-weight: 600; }
+.pp b { font-size: 1.05em; }
+.pp ul { margin: 6px 0 0; padding-left: 18px; }
+.pp .note { color: var(--muted); font-size: .9em; margin-top: 6px; }
+.leaflet-popup-content { margin: 10px 12px; }
+@media (max-width: 760px) { .wrap { grid-template-columns: 1fr; grid-template-rows: 60vh auto; } aside { border-left: 0; border-top: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Mapa legend</h1>
+  <a id="back" href="index.html">← tekst</a>
+  <span class="spacer"></span>
+  <label><input type="checkbox" id="old" checked> <span id="oldL"></span></label>
+  <label><span id="opL">przezroczystość</span> <input type="range" id="op" min="0" max="100" value="85"></label>
+</header>
+<div class="wrap">
+  <div id="map"></div>
+  <aside><input id="q" type="search" placeholder="szukaj miejsca…"><ul id="list"></ul><p id="cnt" style="color:var(--muted);font-size:.88em"></p></aside>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const bookId = params.get("book") || "sagen-posen";
+const $ = (id) => document.getElementById(id);
+const en = (params.get("lang") || (navigator.language || "pl")).startsWith("en");
+const T = en ? { back: "← text", old: "period map (1:100,000 c. 1905–09; close up 1:25,000 where available)", op: "opacity", q: "find a place…", in: "mentioned in", unsure: "uncertain location", approx: "approximate position (nearby village)",
+                 count: (n, m) => `${n} places on the map, ${m} without a known location`, noPos: "location unknown" }
+             : { back: "← tekst", old: "mapa z epoki (1:100 000 ok. 1905–09; z bliska 1:25 000, gdzie jest)", op: "przezroczystość", q: "szukaj miejsca…", in: "wspomniane w", unsure: "położenie niepewne", approx: "położenie przybliżone (pobliska wieś)",
+                 count: (n, m) => `${n} miejsc na mapie, ${m} bez ustalonego położenia`, noPos: "położenie nieustalone" };
+$("back").textContent = T.back; $("oldL").textContent = T.old; $("opL").textContent = T.op; $("q").placeholder = T.q;
+$("back").href = `index.html?book=${bookId}`;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const map = L.map("map", { zoomSnap: 0.5 }).setView([52.4, 17.3], 8);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(map);
+// Karte des Deutschen Reiches 1:100 000, mosaic WMS of SLUB Dresden (see docs/MAPS.md); transparent outside the 1914 border
+const kdr = L.tileLayer.wms("https://wms.kartenforum.slub-dresden.de/map/deutsches_reich_tk100", {
+  layers: "deutsches_reich_tk100", format: "image/png", transparent: true, opacity: 0.85, maxZoom: 18,
+  attribution: 'Karte des Deutschen Reiches 1:100 000: <a href="https://kartenforum.slub-dresden.de">SLUB Dresden / Deutsche Fotothek</a> (CC BY-SA 4.0 / PD)',
+}).addTo(map);
+// Messtischblatt 1:25 000 sheets around the places (map/mtb-sheets.json, see docs/MAPS.md), from zoom 12 on.
+// Only editions up to 1919 (and Posen-Nord, a later print of the 1890 sheet): 1930s-40s sheets carry wartime names.
+const mtb = L.layerGroup();
+const MTB_OK = new Set(["df_dk_0010001_3567"]);
+fetch(`books/${bookId}/map/mtb-sheets.json`).then(r => r.ok ? r.json() : []).then(sheets => {
+  for (const s of sheets) if (s.year <= 1919 || MTB_OK.has(s.file_name))
+    L.tileLayer(`https://tms-{s}.kartenforum.slub-dresden.de/mtb/${s.file_name}/{z}/{x}/{y}.png`, {
+      tms: true, subdomains: "12", bounds: s.bounds, minZoom: 12, maxNativeZoom: 16, maxZoom: 18, opacity: kdr.options.opacity,
+      attribution: 'Meßtischblätter 1:25 000: <a href="https://kartenforum.slub-dresden.de">SLUB Dresden / Deutsche Fotothek</a>',
+    }).addTo(mtb);
+  if ($("old").checked) mtb.addTo(map);
+}).catch(() => {});
+$("old").onchange = (e) => { for (const l of [kdr, mtb]) e.target.checked ? l.addTo(map) : map.removeLayer(l); };
+$("op").oninput = (e) => { kdr.setOpacity(e.target.value / 100); mtb.eachLayer(l => l.setOpacity(e.target.value / 100)); };
+
+const sentenceLink = (sid) => `index.html?book=${bookId}&s=${sid}`;
+function popupHtml(p) {
+  const legends = new Map();  // one line per legend, linking to its first mention
+  for (const l of p.legends || []) if (!legends.has(l.legend)) legends.set(l.legend, l.sid);
+  return `<div class="pp"><b>${esc(p.de[0])}</b> / ${esc(p.pl)}${p.kreis ? `<br><small>Kr. ${esc(p.kreis)}</small>` : ""}
+    ${p.approx ? `<br><span class="q">${T.approx}</span>` : p.confidence !== "certain" ? `<br><span class="q">${T.unsure}</span>` : ""}
+    <div style="margin-top:6px">${T.in}:</div><ul>${[...legends].map(([t, sid]) => `<li><a href="${sentenceLink(sid)}">${esc(t)}</a></li>`).join("")}</ul>
+    ${p.note && p.confidence !== "certain" ? `<div class="note">${esc(p.note)}</div>` : ""}</div>`;
+}
+
+fetch(`books/${bookId}/places.json`).then(r => r.json()).then(({ places }) => {
+  const markers = {}, list = $("list");
+  places.sort((a, b) => a.de[0].localeCompare(b.de[0], "de"));
+  let off = 0;
+  for (const p of places) {
+    const li = document.createElement("li");
+    li.innerHTML = `${esc(p.de[0])} <small>${esc(p.pl)}</small>${p.lat == null ? ` <small>· ${T.noPos}</small>` : ""}`;
+    li.dataset.k = `${p.de.join(" ")} ${p.forms.join(" ")} ${p.pl}`.toLowerCase();
+    if (p.lat != null) {
+      const m = L.circleMarker([p.lat, p.lon], { radius: p.type === "district" ? 5 : 7, weight: 2,
+        color: p.approx ? "#6b665d" : p.confidence === "certain" ? "#8a1c00" : "#b07a00", fillOpacity: p.type === "district" ? 0.15 : 0.6,
+        dashArray: p.confidence === "certain" ? null : "3 3" }).addTo(map).bindPopup(popupHtml(p));
+      m.bindTooltip(p.de[0]);
+      markers[p.id] = m;
+      li.onclick = () => { map.setView([p.lat, p.lon], Math.max(map.getZoom(), 11)); m.openPopup(); };
+    } else { off++; li.onclick = () => L.popup().setLatLng(map.getCenter()).setContent(popupHtml(p)).openOn(map); }
+    list.appendChild(li);
+  }
+  $("cnt").textContent = T.count(places.length - off, off);
+  $("q").oninput = (e) => { const q = e.target.value.toLowerCase(); for (const li of list.children) li.hidden = q && !li.dataset.k.includes(q); };
+  const want = params.get("place");  // map.html?place=<id> (from the sentence card)
+  if (want && markers[want]) { map.setView(markers[want].getLatLng(), 12); markers[want].openPopup(); }
+});
+</script>
+</body>
+</html>
