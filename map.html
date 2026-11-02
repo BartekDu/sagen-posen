@@ -77,6 +77,11 @@ fetch(`books/${bookId}/map/mtb-sheets.json`).then(r => r.ok ? r.json() : []).the
       tms: true, subdomains: "12", bounds: s.bounds, minZoom: 12, maxNativeZoom: 16, maxZoom: 18, opacity: kdr.options.opacity,
       attribution: 'Meßtischblätter 1:25 000: <a href="https://kartenforum.slub-dresden.de">SLUB Dresden / Deutsche Fotothek</a>',
     }).addTo(mtb);
+  // Poznań itself: Pharus-Plan Posen (c. 1910, Polona / National Library of Poland), georeferenced in Allmaps
+  L.tileLayer("https://allmaps.xyz/maps/e2bd22afe2f8704c/{z}/{x}/{y}.png", {
+    minZoom: 12, maxZoom: 19, opacity: kdr.options.opacity,
+    attribution: 'Pharus-Plan Posen (ok. 1910): <a href="https://polona.pl">Polona / Biblioteka Narodowa</a>, <a href="https://allmaps.org">Allmaps</a>',
+  }).addTo(mtb);
   if ($("old").checked) mtb.addTo(map);
 }).catch(() => {});
 $("old").onchange = (e) => { for (const l of [kdr, mtb]) e.target.checked ? l.addTo(map) : map.removeLayer(l); };
