@@ -1,0 +1,134 @@
+{
+  "@context": [
+    "http://iiif.io/api/extension/georef/1/context.json",
+    "http://iiif.io/api/presentation/3/context.json"
+  ],
+  "type": "Annotation",
+  "motivation": "georeferencing",
+  "target": {
+    "type": "SpecificResource",
+    "source": {
+      "id": "https://zas.bn.org.pl/iiif/40696730/40982756.tif",
+      "type": "ImageService2",
+      "height": 8604,
+      "width": 9370
+    },
+    "selector": {
+      "type": "SvgSelector",
+      "value": "<svg width=\"9370\" height=\"8604\"><polygon points=\"900,1560 8060,1560 8060,4650 900,4650\" /></svg>"
+    }
+  },
+  "body": {
+    "type": "FeatureCollection",
+    "transformation": {
+      "type": "polynomial",
+      "options": {
+        "order": 1
+      }
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            5713,
+            2980
+          ],
+          "label": "Bridge over the Noteć into Ujście (DK11 ul. Pilska bridge, OSM way 35420343)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.7306,
+            53.0547
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            6053,
+            3200
+          ],
+          "label": "Bridge over the Gwda (Kaddou) on the Piła road (DK11, OSM way 23547016)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.72929,
+            53.05662
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            6333,
+            2867
+          ],
+          "label": "Gwda–Noteć confluence (end of OSM Gwda way 257268949)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.7259,
+            53.0549
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            5100,
+            2380
+          ],
+          "label": "Road leaving the old town uphill to the south (DK11, OSM, approximate)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.7385,
+            53.05
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            1687,
+            2625
+          ],
+          "label": "‘Pars exercitus Suec. hac transiit’: Swedish crossing of the Noteć about 4 km upriver of Ujście (pl.wikipedia, ‘przeprawa pod Dziembowem’; placed on the Noteć 4 km east, approximate)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.79,
+            53.0547
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            1700,
+            2033
+          ],
+          "label": "Village on the south bank beyond the crossing = Chrustowo (OSM place node, approximate)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.7883,
+            53.043
+          ]
+        }
+      }
+    ]
+  }
+}

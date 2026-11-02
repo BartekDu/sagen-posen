@@ -1,0 +1,387 @@
+{
+  "id": "urn:parallel-reader:sagen-posen:overlay:pufendorf-1696-march",
+  "type": "Annotation",
+  "@context": [
+    "http://iiif.io/api/extension/georef/1/context.json",
+    "http://iiif.io/api/presentation/3/context.json"
+  ],
+  "motivation": "georeferencing",
+  "target": {
+    "type": "SpecificResource",
+    "source": {
+      "id": "https://polona.pl/iiif/3/d73bd432-71c5-480f-b6d7-a23a1b4e31a6",
+      "type": "ImageService3",
+      "height": 8257,
+      "width": 10376,
+      "partOf": [
+        {
+          "id": "https://polona.pl/iiif/3/d73bd432-71c5-480f-b6d7-a23a1b4e31a6/info.json",
+          "type": "Canvas",
+          "label": {
+            "pl": [
+              "[1r]"
+            ]
+          },
+          "partOf": [
+            {
+              "id": "https://polona.pl/api/search-service/search/iiif/6986ed76-5aee-4db6-a276-0cae8da7a1d0/manifest.json",
+              "type": "Manifest"
+            }
+          ]
+        }
+      ],
+      "provider": [
+        {
+          "label": {
+            "none": [
+              "Biblioteka Narodowa, Polona"
+            ]
+          },
+          "homepage": [
+            {
+              "id": "https://polona.pl/item-view/6986ed76-5aee-4db6-a276-0cae8da7a1d0"
+            }
+          ]
+        }
+      ]
+    },
+    "selector": {
+      "type": "SvgSelector",
+      "value": "<svg width=\"10376\" height=\"8257\"><polygon points=\"994,925 9353,866 9346,7379 952,7425\" /></svg>"
+    }
+  },
+  "body": {
+    "type": "FeatureCollection",
+    "transformation": {
+      "type": "polynomial",
+      "options": {
+        "order": 2
+      }
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            1349,
+            2552
+          ],
+          "label": "Szczecin (Stetin)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            14.553,
+            53.4285
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            1534,
+            3614
+          ],
+          "label": "Kostrzyn (Custrin)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            14.648,
+            52.5795
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4368,
+            1548
+          ],
+          "label": "Gdańsk (Dantzig)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            18.6466,
+            54.352
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4689,
+            1945
+          ],
+          "label": "Malbork (Marienburg)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            19.0283,
+            54.0397
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4985,
+            1684
+          ],
+          "label": "Elbląg (Elbing)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            19.4045,
+            54.1561
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            5902,
+            957
+          ],
+          "label": "Królewiec (Königsberg)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            20.5108,
+            54.7104
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4409,
+            3389
+          ],
+          "label": "Toruń (Thorn)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            18.6046,
+            53.0103
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4081,
+            3520
+          ],
+          "label": "Inowrocław (Inowratslaw)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            18.261,
+            52.7979
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4057,
+            3659
+          ],
+          "label": "Kruszwica (Kruswitz)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            18.3296,
+            52.6745
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            2820,
+            3958
+          ],
+          "label": "Poznań (Poosen)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            16.9335,
+            52.4082
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            3488,
+            3859
+          ],
+          "label": "Gniezno (Gneesen)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            17.588,
+            52.5354
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            3540,
+            4713
+          ],
+          "label": "Kalisz (Kalisch)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            18.091,
+            51.7611
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            2860,
+            5641
+          ],
+          "label": "Wrocław (Breslau)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            17.032,
+            51.11
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            4987,
+            7341
+          ],
+          "label": "Kraków (Cracowia)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            19.9366,
+            50.0614
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            6165,
+            3829
+          ],
+          "label": "Warszawa (Warsovia)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            21.0122,
+            52.2497
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            7539,
+            5388
+          ],
+          "label": "Lublin"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            22.5684,
+            51.2465
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            8540,
+            4332
+          ],
+          "label": "Brześć (Brzesc)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            23.6553,
+            52.0833
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            8297,
+            2176
+          ],
+          "label": "Grodno"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            23.8297,
+            53.6779
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "resourceCoords": [
+            9053,
+            7262
+          ],
+          "label": "Lwów (Leopolis)"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            24.0315,
+            49.8419
+          ]
+        }
+      }
+    ]
+  }
+}

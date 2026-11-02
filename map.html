@@ -31,6 +31,12 @@ aside li small, .pp small { color: var(--muted); }
 .pp ul { margin: 6px 0 0; padding-left: 18px; }
 .pp .note { color: var(--muted); font-size: .9em; margin-top: 6px; }
 .leaflet-popup-content { margin: 10px 12px; }
+.lp { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; max-width: 290px; font-size: 13px; line-height: 1.35; }
+.lp summary { cursor: pointer; font-weight: 600; }
+.lp h5 { margin: 8px 0 2px; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.lp .row { display: grid; grid-template-columns: auto 1fr; gap: 0 6px; align-items: center; margin: 3px 0; }
+.lp .row input[type=range] { grid-column: 2; width: 100%; height: 14px; margin: 0; }
+.lp small { color: var(--muted); }
 @media (max-width: 760px) { .wrap { grid-template-columns: 1fr; grid-template-rows: 60vh auto; } aside { border-left: 0; border-top: 1px solid var(--line); } }
 </style>
 </head>
@@ -39,8 +45,6 @@ aside li small, .pp small { color: var(--muted); }
   <h1 id="title">Mapa legend</h1>
   <a id="back" href="index.html">← tekst</a>
   <span class="spacer"></span>
-  <label><input type="checkbox" id="old" checked> <span id="oldL"></span></label>
-  <label><span id="opL">przezroczystość</span> <input type="range" id="op" min="0" max="100" value="85"></label>
 </header>
 <div class="wrap">
   <div id="map"></div>
@@ -51,11 +55,11 @@ const params = new URLSearchParams(location.search);
 const bookId = params.get("book") || "sagen-posen";
 const $ = (id) => document.getElementById(id);
 const en = (params.get("lang") || (navigator.language || "pl")).startsWith("en");
-const T = en ? { back: "← text", old: "period map (1:100,000 c. 1905–09; close up 1:25,000 where available)", op: "opacity", q: "find a place…", in: "mentioned in", unsure: "uncertain location", approx: "approximate position (nearby village)",
+const T = en ? { back: "← text", layers: "Map layers", zoomFrom: (z) => `visible from zoom ${z}`, zoomTo: (z) => `visible up to zoom ${z}`, q: "find a place…", in: "mentioned in", unsure: "uncertain location", approx: "approximate position (nearby village)",
                  count: (n, m) => `${n} places on the map, ${m} without a known location`, noPos: "location unknown" }
-             : { back: "← tekst", old: "mapa z epoki (1:100 000 ok. 1905–09; z bliska 1:25 000, gdzie jest)", op: "przezroczystość", q: "szukaj miejsca…", in: "wspomniane w", unsure: "położenie niepewne", approx: "położenie przybliżone (pobliska wieś)",
+             : { back: "← tekst", layers: "Warstwy mapy", zoomFrom: (z) => `widoczna od zoomu ${z}`, zoomTo: (z) => `widoczna do zoomu ${z}`, q: "szukaj miejsca…", in: "wspomniane w", unsure: "położenie niepewne", approx: "położenie przybliżone (pobliska wieś)",
                  count: (n, m) => `${n} miejsc na mapie, ${m} bez ustalonego położenia`, noPos: "położenie nieustalone" };
-$("back").textContent = T.back; $("oldL").textContent = T.old; $("opL").textContent = T.op; $("q").placeholder = T.q;
+$("back").textContent = T.back; $("q").placeholder = T.q;
 $("back").href = `index.html?book=${bookId}`;
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -66,10 +70,10 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 const kdr = L.tileLayer.wms("https://wms.kartenforum.slub-dresden.de/map/deutsches_reich_tk100", {
   layers: "deutsches_reich_tk100", format: "image/png", transparent: true, opacity: 0.85, maxZoom: 18,
   attribution: 'Karte des Deutschen Reiches 1:100 000: <a href="https://kartenforum.slub-dresden.de">SLUB Dresden / Deutsche Fotothek</a> (CC BY-SA 4.0 / PD)',
-}).addTo(map);
+});
 // Messtischblatt 1:25 000 sheets around the places (map/mtb-sheets.json, see docs/MAPS.md), from zoom 12 on.
 // Only editions up to 1919 (and Posen-Nord, a later print of the 1890 sheet): 1930s-40s sheets carry wartime names.
-const mtb = L.layerGroup();
+const mtb = L.layerGroup(), pharus = L.layerGroup();
 const MTB_OK = new Set(["df_dk_0010001_3567"]);
 fetch(`books/${bookId}/map/mtb-sheets.json`).then(r => r.ok ? r.json() : []).then(sheets => {
   for (const s of sheets) if (s.year <= 1919 || MTB_OK.has(s.file_name))
@@ -81,11 +85,51 @@ fetch(`books/${bookId}/map/mtb-sheets.json`).then(r => r.ok ? r.json() : []).the
   L.tileLayer("https://allmaps.xyz/maps/e2bd22afe2f8704c/{z}/{x}/{y}.png", {
     minZoom: 12, maxZoom: 19, opacity: kdr.options.opacity,
     attribution: 'Pharus-Plan Posen (ok. 1910): <a href="https://polona.pl">Polona / Biblioteka Narodowa</a>, <a href="https://allmaps.org">Allmaps</a>',
-  }).addTo(mtb);
-  if ($("old").checked) mtb.addTo(map);
+  }).addTo(pharus);
+  syncLayers();
 }).catch(() => {});
-$("old").onchange = (e) => { for (const l of [kdr, mtb]) e.target.checked ? l.addTo(map) : map.removeLayer(l); };
-$("op").oninput = (e) => { kdr.setOpacity(e.target.value / 100); mtb.eachLayer(l => l.setOpacity(e.target.value / 100)); };
+
+// ---- layer panel: per period and per map, each with its own on/off and opacity ----
+// entry: {id, group, label, layer, on, opacity, min, max}; a layer shows when it is on and the zoom is within min..max
+const GROUPS = en ? { "1910": "c. 1910 (German Empire)", "1655": "Swedish Deluge (1655–1696)" }
+                  : { "1910": "ok. 1910 (Cesarstwo Niemieckie)", "1655": "Potop szwedzki (1655–1696)" };
+const LAYERS = [
+  { id: "kdr", group: "1910", label: "Karte des Deutschen Reiches 1:100 000 (1905–09)", layer: kdr, on: true, opacity: 0.85, min: 0, max: 19 },
+  { id: "mtb", group: "1910", label: en ? "Messtischblatt 1:25 000 (to 1919)" : "Messtischblatt 1:25 000 (do 1919)", layer: mtb, on: true, opacity: 0.85, min: 12, max: 19 },
+  { id: "pharus", group: "1910", label: en ? "Pharus plan of Posen (c. 1910)" : "Plan Poznania Pharus (ok. 1910)", layer: pharus, on: true, opacity: 0.9, min: 12, max: 19 },
+];
+const setOp = (e) => e.layer.eachLayer ? e.layer.eachLayer(l => l.setOpacity?.(e.opacity)) : e.layer.setOpacity?.(e.opacity);
+function syncLayers() {
+  const z = map.getZoom();
+  for (const e of LAYERS) {
+    const show = e.on && z >= e.min && z <= e.max;
+    if (show && !map.hasLayer(e.layer)) { e.layer.addTo(map); setOp(e); }
+    if (!show && map.hasLayer(e.layer)) map.removeLayer(e.layer);
+  }
+}
+const panel = L.control({ position: "topright" });
+panel.onAdd = () => { const d = L.DomUtil.create("div", "lp"); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d); return d; };
+panel.addTo(map);
+function renderPanel() {
+  const el = panel.getContainer(), open = el.querySelector("details")?.open ?? true;
+  el.innerHTML = `<details ${open ? "open" : ""}><summary>${T.layers}</summary>` + Object.entries(GROUPS).map(([g, name]) => {
+    const items = LAYERS.filter(e => e.group === g);
+    if (!items.length) return "";
+    return `<h5><input type="checkbox" data-g="${g}" ${items.every(e => e.on) ? "checked" : ""}>${esc(name)}</h5>` + items.map(e =>
+      `<div class="row"><input type="checkbox" data-id="${e.id}" ${e.on ? "checked" : ""}><span>${esc(e.label)}` +
+      `${e.min > 0 ? ` <small>· ${T.zoomFrom(e.min)}</small>` : e.max < 19 ? ` <small>· ${T.zoomTo(e.max)}</small>` : ""}</span>` +
+      `<input type="range" min="0" max="100" value="${Math.round(e.opacity * 100)}" data-op="${e.id}"></div>`).join("");
+  }).join("") + `</details>`;
+}
+panel.getContainer().addEventListener("input", (ev) => {
+  const t = ev.target, byId = (id) => LAYERS.find(e => e.id === id);
+  if (t.dataset.op) { const e = byId(t.dataset.op); e.opacity = t.value / 100; setOp(e); return; }
+  if (t.dataset.id) byId(t.dataset.id).on = t.checked;
+  if (t.dataset.g) LAYERS.filter(e => e.group === t.dataset.g).forEach(e => { e.on = t.checked; });
+  syncLayers(); renderPanel();
+});
+map.on("zoomend", syncLayers);
+renderPanel(); syncLayers();
 
 const sentenceLink = (sid) => `index.html?book=${bookId}&s=${sid}`;
 function popupHtml(p) {
@@ -120,6 +164,26 @@ fetch(`books/${bookId}/places.json`).then(r => r.json()).then(({ places }) => {
   const want = params.get("place");  // map.html?place=<id> (from the sentence card)
   if (want && markers[want]) { map.setView(markers[want].getLatLng(), 12); markers[want].openPopup(); }
 });
+</script>
+<script type="module">
+// Swedish Deluge maps and plans (map/overlays/*.json: Allmaps georeference annotations, see docs/MAPS.md).
+// Overview maps show when zoomed out, local plans when zoomed in; a plan drawn as a view is only approximate.
+import { WarpedMapLayer } from "https://cdn.jsdelivr.net/npm/@allmaps/leaflet@1.0.0-beta.55/+esm";
+const OVERLAYS = [
+  { key: "pufendorf-1696-march", min: 0, max: 10, pl: "Pochód Szwedów, Pufendorf (1696)", en: "Swedish march routes, Pufendorf (1696)" },
+  { key: "visscher-1670", min: 0, max: 11, pl: "Pomorze, Visscher (ok. 1670)", en: "Pomerania, Visscher (c. 1670)" },
+  { key: "ujscie-1655", min: 12, max: 19, pl: "Ujście 1655 (plan, przybliżony)", en: "Ujście 1655 (plan, approximate)" },
+  { key: "kruszwica-castle-plan", min: 14, max: 19, pl: "Zamek w Kruszwicy, Dahlbergh (ok. 1655)", en: "Kruszwica castle, Dahlbergh (c. 1655)" },
+  { key: "kruszwica-1655-siege", min: 13, max: 19, pl: "Oblężenie Kruszwicy, Dahlbergh (1655)", en: "Siege of Kruszwica, Dahlbergh (1655)" },
+];
+const base = new URL(`books/${bookId}/map/overlays/`, location.href);
+for (const o of OVERLAYS) {
+  const l = new WarpedMapLayer(null, { opacity: 0.85 });
+  l.addGeoreferenceAnnotationByUrl(new URL(`${o.key}.json`, base).href).catch(() => {});
+  LAYERS.push({ id: o.key, group: "1655", label: en ? o.en : o.pl, layer: l, on: false, opacity: 0.85, min: o.min, max: o.max });
+}
+renderPanel(); syncLayers();
+map.attributionControl.addAttribution('Potop: Riksarkivet, Polona / BN, VU Amsterdam (PD), <a href="https://allmaps.org">Allmaps</a>');
 </script>
 </body>
 </html>

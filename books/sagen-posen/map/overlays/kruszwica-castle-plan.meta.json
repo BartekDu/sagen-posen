@@ -1,0 +1,13 @@
+{
+  "title": "Erik Dahlbergh, plan i widok zamku w Kruszwicy / plan and view of Kruszwica castle (Karta och perspektivritning av slottet Kruschwitz)",
+  "year": "c. 1655",
+  "source_url": "https://sok.riksarkivet.se/arkiv/jYLOen5es4YbsjOvLazGw4",
+  "licence": "Public Domain Mark 1.0 (Riksarkivet, Erik Dahlbergs samling SE/RA/720269/#/0023)",
+  "accuracy": "map",
+  "legends": [
+    56,
+    57
+  ],
+  "note_pl": "Nakładka tylko z górnej połowy arkusza (plan); dolny widok perspektywiczny jest zamaskowany. Archiwum datuje rysunek na 1640?–1669?, najpewniej związany ze zdobyciem Kruszwicy przez Szwedów w 1655. Dopasowanie zgrubne (afiniczne, ok. 10 m błędu przy zamku): punkty kontrolne to Mysia Wieża, narożniki wzgórza zamkowego i brzeg Gopła przy zamku. Brzeg jeziora zmienił się od XVII w. (obniżenie poziomu Gopła), więc dalej od zamku błąd może przekraczać 100 m. Kościół na planie to kościół miejski na zachód od zamku, nie kolegiata (ta leży ok. 860 m na północ, poza kadrem planu).",
+  "note_en": "Overlay uses only the upper half of the sheet (the plan); the perspective view below is masked out. The archive dates the drawing 1640?-1669?, most likely tied to the Swedish capture of Kruszwica in 1655. Coarse affine fit (about 10 m residuals at the castle): control points are Mysia Wieza, corners of the castle mound and the Goplo shore next to the castle. The lake shore has changed since the 17th century (Goplo was lowered), so error away from the castle can exceed 100 m. The church on the plan is a town church west of the castle, not the collegiate church (which lies about 860 m north, outside the plan)."
+}

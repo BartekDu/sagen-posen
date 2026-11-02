@@ -1,0 +1,14 @@
+{
+ "title": "E. Dahlbergh, Munita arx Krusewix à Suecis capta 12 Aug. 1655: inset plan of Kruszwica castle (Riksarkivet R0002012)",
+ "year": 1655,
+ "source_url": "https://sok.riksarkivet.se/arkiv/SAm6wPOtyoJJYOJF47fOh1",
+ "manifest_url": "https://lbiiif.riksarkivet.se/arkis!R0002012/manifest",
+ "licence": "Public Domain Mark 1.0, Riksarkivet, Erik Dahlbergs samling SE/RA/720269/#/0041",
+ "accuracy": "map",
+ "legends": [
+  56,
+  57
+ ],
+ "note_pl": "Nakładka to tylko mały plan-wstawka z lewego dolnego rogu rysunku Dahlbergha (Arx, Oppidum, Lacus); widoku perspektywicznego oblężenia nie da się położyć na mapie, więc zostaje jako obrazek w dymku. Plan jest szkicowy: 5 punktów (Mysia Wieża, rynek, trzy punkty brzegu Gopła wokół wzgórza zamkowego), transformacja afiniczna, błąd ok. 10-35 m, skala ok. 0,8 m/px, obejmuje ok. 800 x 350 m. Linia brzegu z 1655 r. nie pokrywa się dokładnie z dzisiejszą.",
+ "note_en": "The overlay is only the small inset plan in the lower left of Dahlbergh's drawing (Arx, Oppidum, Lacus); the perspective view of the siege cannot be laid on a map and stays as the popup image. The plan is a sketch: 5 GCPs (Mysia Wieża tower, market square, three Gopło shore points around the castle hill), affine transform, residuals about 10-35 m, scale about 0.8 m/px, covering about 800 x 350 m. The 1655 shoreline does not match today's exactly."
+}

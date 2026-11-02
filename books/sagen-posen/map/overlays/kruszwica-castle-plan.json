@@ -1,0 +1,120 @@
+{
+ "@context": [
+  "http://iiif.io/api/extension/georef/1/context.json",
+  "http://iiif.io/api/presentation/3/context.json"
+ ],
+ "type": "Annotation",
+ "motivation": "georeferencing",
+ "target": {
+  "type": "SpecificResource",
+  "source": {
+   "id": "https://lbiiif.riksarkivet.se/v3/arkis!R0001994_00001",
+   "type": "ImageService3",
+   "width": 4179,
+   "height": 3535,
+   "partOf": [
+    {
+     "id": "https://lbiiif.riksarkivet.se/arkis!R0001994/manifest",
+     "type": "Manifest"
+    }
+   ]
+  },
+  "selector": {
+   "type": "SvgSelector",
+   "value": "<svg width=\"4179\" height=\"3535\"><polygon points=\"425,640 3738,640 3738,1990 425,1990\" /></svg>"
+  }
+ },
+ "body": {
+  "type": "FeatureCollection",
+  "transformation": {
+   "type": "helmert"
+  },
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      3335,
+      1080
+     ],
+     "label": "Mysia Wieza, tower centre"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.32737,
+      52.67211
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      3430,
+      973
+     ],
+     "label": "castle ruins, N corner"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.32807,
+      52.67265
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      3515,
+      1115
+     ],
+     "label": "castle ruins, E corner"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.32848,
+      52.67222
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      3450,
+      1265
+     ],
+     "label": "castle ruins, S corner"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.3279,
+      52.67171
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      3410,
+      1415
+     ],
+     "label": "Goplo shore S of castle (moat outlet)"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.32741,
+      52.67115
+     ]
+    }
+   }
+  ]
+ }
+}

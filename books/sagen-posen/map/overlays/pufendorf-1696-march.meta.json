@@ -1,0 +1,21 @@
+{
+  "title": "E. Dahlbergh / L. Cordier, Auctior et correctior tabula chorographica Regni Poloniae ... ubi itinera, quae ... Carolus Gustavus ... fecit (S. Pufendorf, De rebus a Carolo Gustavo gestis, Nürnberg 1696)",
+  "year": 1696,
+  "source_url": "https://polona.pl/item-view/6986ed76-5aee-4db6-a276-0cae8da7a1d0",
+  "iiif_image": "https://polona.pl/iiif/3/d73bd432-71c5-480f-b6d7-a23a1b4e31a6",
+  "iiif_manifest": "https://polona.pl/api/search-service/search/iiif/6986ed76-5aee-4db6-a276-0cae8da7a1d0/manifest.json",
+  "licence": "Domena Publiczna / Public Domain (Biblioteka Narodowa, Polona); georeference: own GCPs, CC0",
+  "accuracy": "map",
+  "legends": [
+    47,
+    54,
+    55,
+    56,
+    57,
+    58,
+    71,
+    78
+  ],
+  "note_pl": "Mapa Polski z trasami marszów Karola X Gustawa 1655–1660 (numerowane etapy, linie przerywane), rytował L. Cordier wg E. Dahlbergha, z dzieła Pufendorfa (Norymberga 1696). Skala ok. 1:2 000 000. Georeferencja: 19 miast (Szczecin–Królewiec–Grodno–Lwów–Kraków–Wrocław, oraz Poznań, Gniezno, Inowrocław, Kruszwica), transformacja wielomianowa 2. stopnia; odchylenia punktów 3–27 km (w Kujawach 3–8 km), więc tylko do małych powiększeń (z6–9). Pokazuje drogi wojsk szwedzkich przez Wielkopolskę i Kujawy, tło dla wszystkich legend o Szwedach.",
+  "note_en": "Map of Poland with the march routes of Charles X Gustav 1655-1660 (numbered stages, dashed lines), engraved by L. Cordier after E. Dahlbergh, from Pufendorf (Nuremberg 1696). Scale about 1:2,000,000. Georeferenced with 19 towns (Szczecin-Königsberg-Grodno-Lviv-Kraków-Wrocław, plus Poznań, Gniezno, Inowrocław, Kruszwica), 2nd-order polynomial; GCP residuals 3-27 km (3-8 km in Kujawy), so use only at low zoom (z6-9). Shows the Swedish army's roads through Greater Poland and Kujawy, context for all the Swedish legends."
+}

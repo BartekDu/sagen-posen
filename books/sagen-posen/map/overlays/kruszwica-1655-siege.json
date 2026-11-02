@@ -1,0 +1,127 @@
+{
+ "id": "urn:parallel-reader:sagen-posen:overlay:kruszwica-1655-siege",
+ "type": "Annotation",
+ "@context": [
+  "http://iiif.io/api/extension/georef/1/context.json",
+  "http://iiif.io/api/presentation/3/context.json"
+ ],
+ "created": "2026-11-02T00:00:00Z",
+ "modified": "2026-11-02T00:00:00Z",
+ "motivation": "georeferencing",
+ "target": {
+  "type": "SpecificResource",
+  "source": {
+   "id": "https://lbiiif.riksarkivet.se/v3/arkis!R0002012_00001",
+   "type": "ImageService3",
+   "width": 5067,
+   "height": 3892,
+   "partOf": [
+    {
+     "id": "https://lbiiif.riksarkivet.se/arkis!R0002012_00001/canvas",
+     "type": "Canvas",
+     "partOf": [
+      {
+       "id": "https://lbiiif.riksarkivet.se/arkis!R0002012/manifest",
+       "type": "Manifest"
+      }
+     ]
+    }
+   ]
+  },
+  "selector": {
+   "type": "SvgSelector",
+   "value": "<svg width=\"5067\" height=\"3892\"><polygon points=\"798,2820 1060,2800 1230,2780 1360,2818 1730,2812 1732,3280 800,3285\" /></svg>"
+  }
+ },
+ "body": {
+  "type": "FeatureCollection",
+  "transformation": {
+   "type": "polynomial",
+   "options": {
+    "order": 1
+   }
+  },
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      1338,
+      3010
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.327373,
+      52.672112
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      908,
+      2905
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.3219,
+      52.6731
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      1532,
+      3025
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.3292,
+      52.6721
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      1385,
+      2907
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.3284,
+      52.6731
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "resourceCoords": [
+      1360,
+      3175
+     ]
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      18.3275,
+      52.6713
+     ]
+    }
+   }
+  ]
+ }
+}

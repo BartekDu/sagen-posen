@@ -1,0 +1,13 @@
+{
+  "title": "N. Visscher, Pomeraniae ducatus tabula (VU Amsterdam krt:3146)",
+  "year": 1670,
+  "source_url": "https://cdm21033.contentdm.oclc.org/digital/collection/krt/id/3146",
+  "allmaps_map_id": "368b8b253d2acef3",
+  "annotation_url": "https://annotations.allmaps.org/maps/368b8b253d2acef3",
+  "tiles": "https://allmaps.xyz/maps/368b8b253d2acef3/{z}/{x}/{y}.png",
+  "licence": "Public Domain Mark (Universiteitsbibliotheek VU Amsterdam); georeference: Allmaps community annotation",
+  "accuracy": "map",
+  "legends": [47, 78],
+  "note_pl": "Mapa Pomorza N. Visschera, ok. 1670 (ok. 1:770 000), już zgeoreferencowana w Allmaps (30 punktów, transformacja wielomianowa 1. stopnia). Obejmuje 12,1–18,0 E, 52,75–54,8 N: Noteć, Piłę i Czarnków, bez Kujaw. Nadaje się tylko do małych powiększeń (do ok. z10).",
+  "note_en": "N. Visscher's map of Pomerania, c. 1670 (about 1:770,000), already georeferenced in Allmaps (30 GCPs, 1st-order polynomial). Covers 12.1-18.0 E, 52.75-54.8 N: the Noteć, Piła and Czarnków, not Kujawy. Use only at low zoom (up to about z10)."
+}
